@@ -6,7 +6,7 @@
 
 screen_exit_code=$?
 
-if [ $screen_exit_code != 1 ]; then
+if [[ $screen_exit_code != 1 ]]; then
     echo "[ERROR] \"screen\" must be installed"
     exit 1
 fi
