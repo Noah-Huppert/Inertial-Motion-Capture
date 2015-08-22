@@ -12,11 +12,15 @@ if [[ $rsync_exit_code != 0 ]]; then
 fi
 
 # Check for host option
-if [[ $# != 1 ]]; then
-    echo "[ERROR] Edison host must be the first and only argument provided"
+if [ -z "$EDISON_HOST" ]; then
+    export EDISON_HOST=$1
+fi
+
+if [ -z "$EDISON_HOST" ]; then
+    export EDISON_HOST=192.168.2.15
 fi
 
 # Push
-echo "[INFO] Pushing to Edison"
+echo "[INFO] Pushing to Edison($EDISON_HOST)"
 
-rsync -a ./imc-server root@$1:~/imc-server
+rsync -a ./imc-server edison@$EDISON_HOST:~
