@@ -5,10 +5,16 @@ Using [Ubilinux](http://www.emutexlabs.com/ubilinux) for OS
 
 # Usefull Intel Edison commands
 - `client`(Any computer)
-    - `scripts/serial.sh`
-        - Establishes a serial connection with the Intel Edison
-    - `scripts/push.sh`
-        - Pushes the `imc-server` folder to the Intel Edison
+    - `python cli.py <commands>`
+        - Run using Python 3(Ubuntu use `python3` in place of `python`)
+        - You can put one or more of the following commands in place of
+        `<commands>`
+            - `push`
+                - Pushes the `imc-server` folder to the Intel Edison
+            - `compile`
+                - Compiles the `imc-server` code on the Intel Edison
+            - `run`
+                - Runs the `imc-server` executable on the Intel Edison
 - `host`(Intel Edison)
     - Configure Wifi on Edison
         - `su`
