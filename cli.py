@@ -4,6 +4,7 @@ import os, sys, getpass, paramiko
 TAG_PROMPT = "[ PROMPT ]"
 TAG_INFO   = "[ INFO   ]"
 TAG_DEBUG  = "[ DEBUG  ]"
+TAG_ERROR  = "[ ERROR  ]"
 
 class Log:
     def log(self, tag, *args):
@@ -22,6 +23,9 @@ class Log:
     def d(self, *args):
         self.log(TAG_DEBUG, *args)
 
+    def e(self, *args):
+        self.log(TAG_ERROR, *args)
+
     def stdout(self, prefix, stdout):
         for line in iter(lambda: stdout.readline(2048), ""):
             print("{0}{1}".format(prefix, line), end="")
@@ -32,19 +36,23 @@ log = Log()
 commands = sys.argv
 commands.pop(0)
 
+command_all = "all" in commands
+
 # Get Edison password
 edison = {}
 edison['host'] = os.environ.get('EDISON_HOST') or "192.168.2.15"
 edison['password'] = os.environ.get('EDISON_PASSWORD')
 
-if os.environ.get('EDISON_CLI_SKIP_PROMPT') != "1":
+skip_cli_prompt = os.environ.get('EDISON_CLI_SKIP_PROMPT') == "1"
+
+if not skip_cli_prompt or os.environ.get('EDISON_HOST') == None:
     log.p("Enter Edison host (Default: {0})".format(edison['host']))
     edison['host'] = input() or edison['host']
 else:
     log.i("Edison host is", edison['host'])
 
 
-if os.environ.get('EDISON_CLI_SKIP_PROMPT') != "1":
+if not skip_cli_prompt or os.environ.get('EDISON_PASSWORD') == None:
     log.p("Enter Edison password {0}".format(
         "(**********)" if edison['password'] else ""
     ))
@@ -57,7 +65,7 @@ ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 ssh.load_host_keys(os.path.expanduser(os.path.join("~", ".ssh", "known_hosts")))
 ssh.connect(edison['host'], username="edison", password=edison['password'])
 
-if "push" or "all" in commands:
+if "push" in commands or command_all:
     log.i("Pushing \"imc-server\" to Edison")
 
     sftp = ssh.open_sftp()
@@ -73,14 +81,15 @@ if "push" or "all" in commands:
 
     log.i("Push success")
 
-if "compile" or "all" in commands:
+if "compile" in commands or command_all:
     stdin, stdout, stderr = ssh.exec_command("mkdir -p ~/imc-server/build && cd ~/imc-server/build && cmake .. && make")
     log.d("Compile output")
     log.stdout("    ", stdout)
 
-if "run" or "all" in commands:
+if "run" in commands or command_all:
     stdin, stdout, stderr = ssh.exec_command("cd /home/edison/imc-server/build && ./imc-server")
     log.d("Run output")
     log.stdout("    ", stdout)
+
 
 ssh.close()

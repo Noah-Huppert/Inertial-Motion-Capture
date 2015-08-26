@@ -15,6 +15,14 @@ Using [Ubilinux](http://www.emutexlabs.com/ubilinux) for OS
                 - Compiles the `imc-server` code on the Intel Edison
             - `run`
                 - Runs the `imc-server` executable on the Intel Edison
+        - Environment Variables
+            - `EDISON_HOST`
+                - The address of the Edison
+            - `EDISON_PASSWORD`
+                - The password for the Edison
+            - `EDISON_CLI_SKIP_PROMPT`
+                - If `1` the CLI will skip any prompts that are set by
+                environment variables
 - `host`(Intel Edison)
     - Configure Wifi on Edison
         - `su`
