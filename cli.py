@@ -1,4 +1,4 @@
-import os, sys, getpass, paramiko
+import os, sys, getpass, subprocess, paramiko
 
 # Log helpers
 TAG_PROMPT = "[ PROMPT ]"
@@ -37,6 +37,11 @@ commands = sys.argv
 commands.pop(0)
 
 command_all = "all" in commands
+command_push = "push" in commands
+command_compile = "compile" in commands
+command_run = "run" in commands
+
+command_ssh = "ssh" in commands
 
 # Get Edison password
 edison = {}
@@ -60,36 +65,39 @@ if not skip_cli_prompt or os.environ.get('EDISON_PASSWORD') == None:
 else:
     log.i("Edison password is set")
 
-ssh = paramiko.SSHClient()
-ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-ssh.load_host_keys(os.path.expanduser(os.path.join("~", ".ssh", "known_hosts")))
-ssh.connect(edison['host'], username="edison", password=edison['password'])
+if command_all or command_push or command_compile or command_run:
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    ssh.load_host_keys(os.path.expanduser(os.path.join("~", ".ssh", "known_hosts")))
+    ssh.connect(edison['host'], username="edison", password=edison['password'])
 
-if "push" in commands or command_all:
-    log.i("Pushing \"imc-server\" to Edison")
+    if command_push or command_all:
+        log.i("Pushing \"imc-server\" to Edison")
 
-    sftp = ssh.open_sftp()
+        sftp = ssh.open_sftp()
 
-    for (dir_path, dir_names, filenames) in os.walk("imc-server"):
-        for filename in filenames:
-            local_path = os.path.join(dir_path, filename)
-            server_path = os.path.join("/home/edison", local_path)
+        for (dir_path, dir_names, filenames) in os.walk("imc-server"):
+            for filename in filenames:
+                local_path = os.path.join(dir_path, filename)
+                server_path = os.path.join("/home/edison", local_path)
 
-            sftp.put(local_path, server_path)
+                sftp.put(local_path, server_path)
 
-    sftp.close()
+        sftp.close()
 
-    log.i("Push success")
+        log.i("Push success")
 
-if "compile" in commands or command_all:
-    stdin, stdout, stderr = ssh.exec_command("mkdir -p ~/imc-server/build && cd ~/imc-server/build && cmake .. && make")
-    log.d("Compile output")
-    log.stdout("    ", stdout)
+    if command_compile or command_all:
+        stdin, stdout, stderr = ssh.exec_command("mkdir -p ~/imc-server/build && cd ~/imc-server/build && cmake .. && make")
+        log.d("Compile output")
+        log.stdout("    ", stdout)
 
-if "run" in commands or command_all:
-    stdin, stdout, stderr = ssh.exec_command("cd /home/edison/imc-server/build && ./imc-server")
-    log.d("Run output")
-    log.stdout("    ", stdout)
+    if command_run or command_all:
+        stdin, stdout, stderr = ssh.exec_command("cd /home/edison/imc-server/build && ./imc-server")
+        log.d("Run output")
+        log.stdout("    ", stdout)
 
-
-ssh.close()
+    ssh.close()
+else:
+    if command_ssh:
+        subprocess.Popen(["ssh", "edison@{0}".format(edison['host'])], stdin=sys.stdin, stderr=sys.stderr, stdout=sys.stdout)
