@@ -1,4 +1,4 @@
-import os, sys, getpass, subprocess, paramiko
+import os, sys, subprocess, getpass, paramiko
 
 # Log helpers
 TAG_PROMPT = "[ PROMPT ]"
@@ -26,9 +26,13 @@ class Log:
     def e(self, *args):
         self.log(TAG_ERROR, *args)
 
-    def stdout(self, prefix, stdout):
-        for line in iter(lambda: stdout.readline(2048), ""):
+    def std(self, prefix, std):
+        for line in iter(lambda: std.readline(2048), ""):
             print("{0}{1}".format(prefix, line), end="")
+
+    def stds(self, prefix, stdout, stderr):
+        self.std(prefix, stderr)
+        self.std(prefix, stdout)
 
 log = Log()
 
@@ -90,14 +94,29 @@ if command_all or command_push or command_compile or command_run:
     if command_compile or command_all:
         stdin, stdout, stderr = ssh.exec_command("mkdir -p ~/imc-server/build && cd ~/imc-server/build && cmake .. && make")
         log.d("Compile output")
-        log.stdout("    ", stdout)
+        log.stds("    ", stderr, stdout)
 
     if command_run or command_all:
         stdin, stdout, stderr = ssh.exec_command("cd /home/edison/imc-server/build && ./imc-server")
         log.d("Run output")
-        log.stdout("    ", stdout)
+        log.stds("    ", stderr, stdout)
 
     ssh.close()
 else:
     if command_ssh:
-        subprocess.Popen(["ssh", "edison@{0}".format(edison['host'])], stdin=sys.stdin, stderr=sys.stderr, stdout=sys.stdout)
+        # Check for ssh-pass
+        install_sshpass = False
+
+        try:
+            sshpass_p = subprocess.Popen(["sshpass", "-V"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            sshpass_p.communicate()
+
+            install_sshpass = sshpass_p.returncode != 0
+        except:
+            install_sshpass = True
+
+        if install_sshpass:
+            log.i("Installing \"sshpass\"")
+            os.system("sudo apt-get install sshpass")
+
+        os.system("sshpass -p {0} ssh edison@{1}".format(edison['password'], edison['host']))

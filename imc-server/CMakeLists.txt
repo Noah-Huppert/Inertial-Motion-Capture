@@ -12,7 +12,7 @@ include(ExternalProject)
 # WebSocket++
 # -- Include
 externalProject_add(websocketpp
-    GIT_REPOSITORY git@github.com:zaphoyd/websocketpp.git
+    GIT_REPOSITORY https://github.com/zaphoyd/websocketpp.git
     GIT_TAG 0.6.0)
 
 set(SOURCE_FILES main.cpp)

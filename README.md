@@ -6,6 +6,8 @@ Using [Ubilinux](http://www.emutexlabs.com/ubilinux) for OS
 # Usefull Intel Edison commands
 - `client`(Any computer)
     - `python cli.py <commands>`
+        - Dependencies
+            - `paramiko`
         - Run using Python 3(Ubuntu use `python3` in place of `python`)
         - You can put one or more of the following commands in place of
         `<commands>`
