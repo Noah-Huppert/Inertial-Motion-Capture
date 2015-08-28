@@ -47,25 +47,34 @@ command_run = "run" in commands
 
 command_ssh = "ssh" in commands
 
-# Get Edison password
+# Get Edison credentials
 edison = {}
-edison['host'] = os.environ.get('EDISON_HOST') or "192.168.2.15"
-edison['password'] = os.environ.get('EDISON_PASSWORD')
+edison["host"] = os.environ.get("EDISON_HOST") or "192.168.2.15"
+edison["user"] = os.environ.get("EDISON_USER") or "root"
+edison["password"] = os.environ.get("EDISON_PASSWORD")
 
-skip_cli_prompt = os.environ.get('EDISON_CLI_SKIP_PROMPT') == "1"
+skip_cli_prompt = os.environ.get("EDISON_CLI_SKIP_PROMPT") == "1"
 
-if not skip_cli_prompt or os.environ.get('EDISON_HOST') == None:
-    log.p("Enter Edison host (Default: {0})".format(edison['host']))
-    edison['host'] = input() or edison['host']
+# Get Edison Host
+if not skip_cli_prompt or os.environ.get("EDISON_HOST") == None:
+    log.p("Enter Edison host (Default: {0})".format(edison["host"]))
+    edison["host"] = input() or edison["host"]
 else:
-    log.i("Edison host is", edison['host'])
+    log.i("Edison host is", edison["host"])
 
+# Get Edison User
+if not skip_cli_prompt or os.environ.get("EDISON_PASSWORD") == None:
+    log.p("Enter Edison host (Default: {0})".format(edison["user"]))
+    edison["user"] = input() or edison["user"]
+else:
+    log.i("Edison user is", edison["user"])
 
-if not skip_cli_prompt or os.environ.get('EDISON_PASSWORD') == None:
+# Get Edison Password
+if not skip_cli_prompt or os.environ.get("EDISON_PASSWORD") == None:
     log.p("Enter Edison password {0}".format(
-        "(**********)" if edison['password'] else ""
+        "(**********)" if edison["password"] else ""
     ))
-    edison['password'] = getpass.getpass(prompt="") or edison['password']
+    edison["password"] = getpass.getpass(prompt="") or edison["password"]
 else:
     log.i("Edison password is set")
 
@@ -73,7 +82,7 @@ if command_all or command_push or command_compile or command_run:
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     ssh.load_host_keys(os.path.expanduser(os.path.join("~", ".ssh", "known_hosts")))
-    ssh.connect(edison['host'], username="edison", password=edison['password'])
+    ssh.connect(edison["host"], username=edison["user"], password=edison["password"])
 
     if command_push or command_all:
         log.i("Pushing \"imc-server\" to Edison")
@@ -92,7 +101,7 @@ if command_all or command_push or command_compile or command_run:
         log.i("Push success")
 
     if command_compile or command_all:
-        stdin, stdout, stderr = ssh.exec_command("mkdir -p ~/imc-server/build && cd ~/imc-server/build && cmake .. && make")
+        stdin, stdout, stderr = ssh.exec_command("mkdir -p /home/edison/imc-server/build && cd /home/edison/imc-server/build && cmake .. && make")
         log.d("Compile output")
         log.stds("    ", stderr, stdout)
 
@@ -119,4 +128,4 @@ else:
             log.i("Installing \"sshpass\"")
             os.system("sudo apt-get install sshpass")
 
-        os.system("sshpass -p {0} ssh edison@{1}".format(edison['password'], edison['host']))
+        os.system("sshpass -p {0} ssh {1}@{2}".format(edison["password"], edison["user"], edison["host"]))

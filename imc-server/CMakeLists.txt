@@ -13,7 +13,8 @@ include(ExternalProject)
 # -- Include
 externalProject_add(websocketpp
     GIT_REPOSITORY https://github.com/zaphoyd/websocketpp.git
-    GIT_TAG 0.6.0)
+    GIT_TAG 0.6.0
+    INSTALL_COMMAND "make install DESTDIR=/home/edison/imc-server/build/lib/websocketpp")
 
 set(SOURCE_FILES main.cpp)
 add_executable(imc-server ${SOURCE_FILES})
