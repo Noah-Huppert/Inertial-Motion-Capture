@@ -1,10 +1,23 @@
 import os, sys, subprocess, getpass, paramiko
 
+from collections import OrderedDict
+
 # Log helpers
-TAG_PROMPT = "[ PROMPT ]"
-TAG_INFO   = "[ INFO   ]"
-TAG_DEBUG  = "[ DEBUG  ]"
-TAG_ERROR  = "[ ERROR  ]"
+class colors:
+    RED     = "\033[31m"
+    GREEN   = "\033[32m"
+    YELLOW  = "\033[33m"
+    BLUE    = "\033[34m"
+    PURPLE  = "\033[35m"
+    CYAN    = "\033[36m"
+    GRAY    = "\033[90m"
+
+    ENDC    = "\033[0m"
+
+TAG_PROMPT = colors.GREEN   + "[ PROMPT ]" + colors.ENDC
+TAG_INFO   = colors.YELLOW  + "[ INFO   ]" + colors.ENDC
+TAG_DEBUG  = colors.BLUE    + "[ DEBUG  ]" + colors.ENDC
+TAG_ERROR  = colors.RED     + "[ ERROR  ]" + colors.ENDC
 
 class Log:
     def log(self, tag, *args):
@@ -36,17 +49,6 @@ class Log:
 
 log = Log()
 
-# Get commands
-commands = sys.argv
-commands.pop(0)
-
-command_all = "all" in commands
-command_push = "push" in commands
-command_compile = "compile" in commands
-command_run = "run" in commands
-
-command_ssh = "ssh" in commands
-
 # Get Edison credentials
 edison = {}
 edison["host"] = os.environ.get("EDISON_HOST") or "192.168.2.15"
@@ -55,77 +57,148 @@ edison["password"] = os.environ.get("EDISON_PASSWORD")
 
 skip_cli_prompt = os.environ.get("EDISON_CLI_SKIP_PROMPT") == "1"
 
-# Get Edison Host
-if not skip_cli_prompt or os.environ.get("EDISON_HOST") == None:
-    log.p("Enter Edison host (Default: {0})".format(edison["host"]))
-    edison["host"] = input() or edison["host"]
-else:
-    log.i("Edison host is", edison["host"])
+# Prompt helpers
+def should_prompt_for(env_key):
+    if skip_cli_prompt:
+        return False
+    elif os.environ.get(env_key) == None:
+        return True
 
-# Get Edison User
-if not skip_cli_prompt or os.environ.get("EDISON_PASSWORD") == None:
-    log.p("Enter Edison host (Default: {0})".format(edison["user"]))
-    edison["user"] = input() or edison["user"]
-else:
-    log.i("Edison user is", edison["user"])
+    return False
 
-# Get Edison Password
-if not skip_cli_prompt or os.environ.get("EDISON_PASSWORD") == None:
-    log.p("Enter Edison password {0}".format(
-        "(**********)" if edison["password"] else ""
-    ))
-    edison["password"] = getpass.getpass(prompt="") or edison["password"]
-else:
-    log.i("Edison password is set")
+def prompt_for(env_key, key, display_value = True):
+    if should_prompt_for(env_key):
+        log.p("Enter Edison {0}".format(key))
+        edison[key] = input() or edison[key]
+    elif display_value == False:
+        log.p("Edison {0} is set".format(key))
+    else:
+        log.p("Edison {0} is".format(key), edison[key])
 
-if command_all or command_push or command_compile or command_run:
-    ssh = paramiko.SSHClient()
-    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    ssh.load_host_keys(os.path.expanduser(os.path.join("~", ".ssh", "known_hosts")))
-    ssh.connect(edison["host"], username=edison["user"], password=edison["password"])
+def traverse_commands(commands, command_defs):
+    for command_def in command_defs:
+        if type(command_defs[command_def]) == OrderedDict:
+            if command_def in commands:
+                for deep_command in command_defs[command_def]:
+                    traverse_commands(deep_command, command_defs[command_def])
+            else:
+                traverse_commands(commands, command_defs[command_def])
+        elif command_def in commands:
+            command_defs[command_def]()
 
-    if command_push or command_all:
-        log.i("Pushing \"imc-server\" to Edison")
 
-        sftp = ssh.open_sftp()
+# Command helpers
+prompted = False
+def prompt_for_edison_info():
+    global prompted
+    if prompted == False:
+        prompt_for("EDISON_HOST", "host")
+        prompt_for("EDISON_USER", "user")
+        prompt_for("EDISON_PASSWORD", "password", False)
 
-        for (dir_path, dir_names, filenames) in os.walk("imc-server"):
-            for filename in filenames:
-                local_path = os.path.join(dir_path, filename)
-                server_path = os.path.join("/home/edison", local_path)
+        prompted = True
 
-                sftp.put(local_path, server_path)
+ssh = None
+def setup_ssh_client():
+    global ssh
+    if ssh == None:
+        ssh = paramiko.SSHClient()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        ssh.load_host_keys(os.path.expanduser(os.path.join("~", ".ssh", "known_hosts")))
+        ssh.connect(edison["host"], username=edison["user"], password=edison["password"])
 
-        sftp.close()
+def run_helpers(*args):
+    if "edison_info" in args:
+        prompt_for_edison_info()
 
-        log.i("Push success")
+    if "ssh_client" in args:
+        setup_ssh_client()
 
-    if command_compile or command_all:
-        stdin, stdout, stderr = ssh.exec_command("mkdir -p /home/edison/imc-server/build && cd /home/edison/imc-server/build && cmake .. && make")
-        log.d("Compile output")
-        log.stds("    ", stderr, stdout)
+# Commands
+def command_push():
+    run_helpers("edison_info", "ssh_client")
 
-    if command_run or command_all:
-        stdin, stdout, stderr = ssh.exec_command("cd /home/edison/imc-server/build && ./imc-server")
-        log.d("Run output")
-        log.stds("    ", stderr, stdout)
+    log.i("Pushing \"imc-server\" to Edison")
 
+    sftp = ssh.open_sftp()
+
+    for (dir_path, dir_names, filenames) in os.walk("imc-server"):
+        for filename in filenames:
+            local_path = os.path.join(dir_path, filename)
+            server_path = os.path.join("/home/edison", local_path)
+
+            sftp.put(local_path, server_path)
+
+    sftp.close()
+
+    log.i("Push success")
+
+def command_compile():
+    run_helpers("edison_info", "ssh_client")
+
+    log.i("Compiling \"imc-server\"")
+
+    stdin, stdout, stderr = ssh.exec_command("mkdir -p /home/edison/imc-server/build && cd /home/edison/imc-server/build && cmake .. && make")
+    log.d("Compile output")
+    log.stds("    ", stderr, stdout)
+
+def command_run():
+    run_helpers("edison_info", "ssh_client")
+
+    log.i("Running \"imc-server\"")
+
+    stdin, stdout, stderr = ssh.exec_command("cd /home/edison/imc-server/build && ./imc-server")
+    log.d("Run output")
+    log.stds("    ", stderr, stdout)
+
+def command_ssh():
+    run_helpers("edison_info")
+
+    log.i("Accessing Edison via SSH")
+
+    # Check for ssh-pass
+    install_sshpass = False
+
+    try:
+        sshpass_p = subprocess.Popen(["sshpass", "-V"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        sshpass_p.communicate()
+
+        install_sshpass = sshpass_p.returncode != 0
+    except:
+        install_sshpass = True
+
+    if install_sshpass:
+        log.i("Installing \"sshpass\"")
+        os.system("sudo apt-get install sshpass")
+
+    os.system("sshpass -p {0} ssh {1}@{2}".format(edison["password"], edison["user"], edison["host"]))
+
+def command_serial():
+    log.i("Accessing Edison via serial")
+
+    if not os.path.isfile("/dev/ttyUSB0"):
+        log.e("Can not find Edison on \"/dev/ttyUSB0\"")
+        return
+
+    os.system("sudo screen /dev/ttyUSB0 115200")
+
+# Get commands
+commands = sys.argv
+commands.pop(0)
+
+command_defs = OrderedDict([
+    ("build",
+        OrderedDict([
+            ("push", command_push),
+            ("compile", command_compile),
+            ("run", command_run)
+        ])
+    ),
+    ("ssh", command_ssh),
+    ("serial", command_serial)
+])
+
+traverse_commands(commands, command_defs)
+
+if ssh != None:
     ssh.close()
-else:
-    if command_ssh:
-        # Check for ssh-pass
-        install_sshpass = False
-
-        try:
-            sshpass_p = subprocess.Popen(["sshpass", "-V"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            sshpass_p.communicate()
-
-            install_sshpass = sshpass_p.returncode != 0
-        except:
-            install_sshpass = True
-
-        if install_sshpass:
-            log.i("Installing \"sshpass\"")
-            os.system("sudo apt-get install sshpass")
-
-        os.system("sshpass -p {0} ssh {1}@{2}".format(edison["password"], edison["user"], edison["host"]))

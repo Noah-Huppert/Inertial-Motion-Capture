@@ -9,12 +9,11 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 # -- Include
 include(ExternalProject)
 
-# WebSocket++
+# Simple-WebSocket-Server
 # -- Include
-externalProject_add(websocketpp
-    GIT_REPOSITORY https://github.com/zaphoyd/websocketpp.git
-    GIT_TAG 0.6.0
-    INSTALL_COMMAND "make install DESTDIR=/home/edison/imc-server/build/lib/websocketpp")
+externalProject_add(libsocket
+    GIT_REPOSITORY https://github.com/dermesser/libsocket.git
+    GIT_TAG v2.4.1)
 
 set(SOURCE_FILES main.cpp)
 add_executable(imc-server ${SOURCE_FILES})
