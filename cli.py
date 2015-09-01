@@ -139,7 +139,7 @@ def check_sshpass():
 def run_ssh_command(command):
     run_helpers("edison_info", "check_sshpass")
 
-    os.system("sshpass -p {0} ssh {1}@{2} \"{3}\"".format(edison["password"], edison["user"], edison["host"], command))
+    return os.system("sshpass -p {0} ssh {1}@{2} \"{3}\"".format(edison["password"], edison["user"], edison["host"], command))
 
 def run_helpers(*args):
     if "edison_info" in args:
@@ -183,9 +183,11 @@ def command_compile():
 
     log.i("Compiling \"imc-server\"")
 
-    stdin, stdout, stderr = ssh.exec_command("mkdir -p /home/edison/imc-server/build && cd /home/edison/imc-server/build && cmake .. && make")
-    log.d("Compile output")
-    log.stds("    ", stderr, stdout)
+    compile_exit_code = run_ssh_command("mkdir -p /home/edison/imc-server/build && cd /home/edison/imc-server/build && cmake .. && make")
+
+    if compile_exit_code != 0:
+        log.e("Failed to compile \"imc-server\"")
+        sys.exit(0)
 
 def command_run():
     log.i("Running \"imc-server\"")
