@@ -1,4 +1,4 @@
-import os, sys, subprocess, getpass, paramiko
+import os, sys, subprocess, getpass, paramiko, re
 
 from collections import OrderedDict
 
@@ -39,9 +39,17 @@ class Log:
     def e(self, *args):
         self.log(TAG_ERROR, *args)
 
-    def std(self, prefix, std):
+    def std(self, prefix, std, print_out = True):
+        out = ""
         for line in iter(lambda: std.readline(2048), ""):
-            print("{0}{1}".format(prefix, line), end="")
+            line = "{0}{1}".format(prefix, line)
+
+            out += line
+
+            if print_out:
+                print(line, end="")
+
+        return out
 
     def stds(self, prefix, stdout, stderr):
         self.std(prefix, stderr)
@@ -107,12 +115,41 @@ def setup_ssh_client():
         ssh.load_host_keys(os.path.expanduser(os.path.join("~", ".ssh", "known_hosts")))
         ssh.connect(edison["host"], username=edison["user"], password=edison["password"])
 
+sshpass_checked = False
+def check_sshpass():
+    global sshpass_checked
+    if sshpass_checked == False:
+        # Check for ssh-pass
+        install_sshpass = False
+
+        try:
+            sshpass_p = subprocess.Popen(["sshpass", "-V"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            sshpass_p.communicate()
+
+            install_sshpass = sshpass_p.returncode != 0
+        except:
+            install_sshpass = True
+
+        if install_sshpass:
+            log.i("Installing \"sshpass\"")
+            os.system("sudo apt-get install sshpass")
+
+        sshpass_checked = False
+
+def run_ssh_command(command):
+    run_helpers("edison_info", "check_sshpass")
+
+    os.system("sshpass -p {0} ssh {1}@{2} \"{3}\"".format(edison["password"], edison["user"], edison["host"], command))
+
 def run_helpers(*args):
     if "edison_info" in args:
         prompt_for_edison_info()
 
     if "ssh_client" in args:
         setup_ssh_client()
+
+    if "check_sshpass":
+        check_sshpass()
 
 # Commands
 def command_push():
@@ -127,7 +164,15 @@ def command_push():
             local_path = os.path.join(dir_path, filename)
             server_path = os.path.join("/home/edison", local_path)
 
-            sftp.put(local_path, server_path)
+            try:
+                sftp.mkdir("/home/edison/{0}".format(dir_path))
+            except:
+                pass
+
+            try:
+                sftp.put(local_path, server_path)
+            except FileNotFoundError:
+                log.e("Failed to push \"{0}\", does not exist".format(local_path))
 
     sftp.close()
 
@@ -143,35 +188,47 @@ def command_compile():
     log.stds("    ", stderr, stdout)
 
 def command_run():
-    run_helpers("edison_info", "ssh_client")
-
     log.i("Running \"imc-server\"")
 
-    stdin, stdout, stderr = ssh.exec_command("cd /home/edison/imc-server/build && ./imc-server")
-    log.d("Run output")
-    log.stds("    ", stderr, stdout)
+    run_ssh_command("cd /home/edison/imc-server/build && ./imc-server")
+
+def command_kill():
+    log.i("Killing \"imc-server\"")
+
+    netstat_p = subprocess.Popen(
+                            [
+                            "sshpass",
+                            "-p",
+                            edison["password"],
+                            "ssh",
+                            "{0}@{1}".format(edison["user"], edison["host"]),
+                            "netstat",
+                            "-lpn"
+                            ],
+                         shell=False,
+                         stdout=subprocess.PIPE)
+
+    (netstat_out, netstat_err) = netstat_p.communicate()
+
+    netstat_out = netstat_out.decode("utf-8")
+
+    pid_exp = re.compile("(\d\d\d\d)\/imc-server")
+    pid_match = re.search(pid_exp, netstat_out)
+
+    try:
+        pid = pid_match.group(1)
+
+        run_ssh_command("kill -9 {0}".format(pid))
+        log.i("\"imc-server\" killed successfully")
+    except:
+        log.i("\"imc-server\" not running")
 
 def command_ssh():
-    run_helpers("edison_info")
+    run_helpers("edison_info", "check_sshpass")
 
     log.i("Accessing Edison via SSH")
 
-    # Check for ssh-pass
-    install_sshpass = False
-
-    try:
-        sshpass_p = subprocess.Popen(["sshpass", "-V"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        sshpass_p.communicate()
-
-        install_sshpass = sshpass_p.returncode != 0
-    except:
-        install_sshpass = True
-
-    if install_sshpass:
-        log.i("Installing \"sshpass\"")
-        os.system("sudo apt-get install sshpass")
-
-    os.system("sshpass -p {0} ssh {1}@{2}".format(edison["password"], edison["user"], edison["host"]))
+    run_ssh_command("")
 
 def command_serial():
     log.i("Accessing Edison via serial")
@@ -191,7 +248,8 @@ command_defs = OrderedDict([
         OrderedDict([
             ("push", command_push),
             ("compile", command_compile),
-            ("run", command_run)
+            ("run", command_run),
+            ("kill", command_kill)
         ])
     ),
     ("ssh", command_ssh),

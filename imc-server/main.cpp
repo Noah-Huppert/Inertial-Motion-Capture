@@ -1,12 +1,38 @@
 #include <iostream>
-#include <inetserverdgram.hpp>
+#include <libsocket/inetserverdgram.hpp>
+#include <libsocket/exception.hpp>
+#include <cstring>
 
-using namespace std;
+int main(void) {
+    using std::string;
 
-int main() {
-    for (int i = 0; i < 10; i++) {
-        cout << "Hello, World!" << endl;
+    string host = "localhost";
+    string port = "1234";
+
+    string answer("Hello back from the server!");
+    string from;
+    string fromport;
+    string buf;
+
+    buf.resize(32);
+
+    try {
+        libsocket::inet_dgram_server srv(host,port,LIBSOCKET_BOTH);
+    for (;;)
+    {
+        srv.rcvfrom(buf,from,fromport);
+
+        std::cout << "Datagram from " << from << ":" << fromport << " " << buf << std::endl;
+
+        srv.sndto(answer,from,fromport);
     }
+
+    srv.destroy();
+    } catch (const libsocket::socket_exception& exc)
+    {
+    std::cerr << exc.mesg;
+    }
+
 
     return 0;
 }
