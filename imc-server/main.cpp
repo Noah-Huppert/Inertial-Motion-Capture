@@ -1,118 +1,79 @@
+//#include <libsocket/inetserverstream.hpp>
+//#include <libsocket/exception.hpp>
+
 #include <iostream>
 #include <thread>
-#include <string>
-#include <signal.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <string.h>
 
-#include <libsocket/inetserverdgram.hpp>
-#include <libsocket/exception.hpp>
-#include <signal.h>
+/* Socket */
+int socket_fd = -1;
+sockaddr_in socket_address, client_address;
+const int socket_connection_backlog_size = 10;
 
-int socket_receive_buffer_size = 256;
+void start_server() {
+    // Create socket
+    socket_fd = socket(AF_INET, SOCK_STREAM, 0);
 
-std::string socket_host = "localhost";
-std::string socket_port = "1234";
+    if (socket_fd < 0) {
+        std::cerr << "Error creating socket" << std::endl;
+        exit(EXIT_FAILURE);
+    } else {
+        std::cout << "Created socket(fd => " << socket_fd << ")" << std::endl;
+    }
 
-void kill_server(int signal) {
-    std::cout << "CTRL+C received" << std::endl;
-    exit(0);
+    // Bind socket
+    bzero((char *) &socket_address, sizeof(socket_address));
+
+    socket_address.sin_family = AF_INET;
+    socket_address.sin_addr.s_addr = INADDR_ANY;
+    socket_address.sin_port = htons(1234);
+
+    int bind_result = bind(socket_fd, (struct sockaddr *) &socket_address, sizeof(socket_address));
+
+    if (bind_result < 0) {
+        std::cerr << "Error binding socket" << std::endl;
+        exit(EXIT_FAILURE);
+    } else {
+        std::cout << "Bound socket(port => " << socket_address.sin_port << ")" << std::endl;
+    }
+
+    // Listen on address
+    int listen_result = listen(socket_fd, socket_connection_backlog_size);
+
+    if (listen_result < 0) {
+        std::cerr << "Error listening on socket" << std::endl;
+        exit(EXIT_FAILURE);
+    } else {
+        std::cout << "Socket listening" << std::endl;
+    }
 }
 
-void run_server() {
-    try {
-        libsocket::inet_dgram_server socket_server(socket_host, socket_port, LIBSOCKET_BOTH);
+void socket_accept() {
+    int client_len;
+    int client_socket_fd = accept(socket_fd, (struct sockaddr *) &client_address, (socklen_t * ) &client_len);
 
-        std::cout << "Running socket on " << socket_host << ":" << socket_port << std::endl;
-
-        /*
-         rcvfrom	(	void * 	buf,
-                        size_t 	len,
-                        string & 	srchost,
-                        string & 	srcport,
-                        int 	rcvfrom_flags = 0,
-                        bool 	numeric = false
-                    )
-         */
-
-        char receive_buffer[socket_receive_buffer_size];
-
-        while (true) {
-            socket_server.rcvfrom(receive_buffer, socket_receive_buffer_size, socket_host, socket_port);
-
-            std::cout << "Socket recieved: " << receive_buffer << std::endl;
-
-            break;
-        }
-    } catch (const libsocket::socket_exception &exception) {
-        std::cout << "Socket exception: " << exception.mesg << std::endl;
-        kill_server(-1);
+    if (client_socket_fd < 0) {
+        std::cerr << "Failed to accept client connection" << std::endl;
+        exit(EXIT_FAILURE);
+    } else {
+        std::cout << "Accepted socket connection(address => " << client_address.sin_addr.s_addr
+                                                              << ", port => " << client_address.sin_port
+                                                << ")" << std::endl;
     }
+
+    const int receive_buffer_size = 256;
+    char receive_buffer[receive_buffer_size];
+
+    recv(client_socket_fd, receive_buffer, receive_buffer_size, 0);
 }
 
 int main() {
-    struct sigaction sigIntHandler;
-    sigIntHandler.sa_handler = kill_server;
-    sigIntHandler.sa_flags = 0;
-    sigemptyset(&sigIntHandler.sa_mask);
+    start_server();
 
-    sigaction(SIGINT, &sigIntHandler, NULL);
+    std::thread socket_accept_thread(socket_accept);
+    socket_accept_thread.join();
 
-    std::thread server_thread(run_server);
-
-    server_thread.join();
-
-    return 0;
+    return EXIT_SUCCESS;
 }
-
-/*
-void server() {
-    using std::string;
-
-    string host = "localhost";
-    string port = "1234";
-
-    string answer("Hello back from the server!");
-    string from;
-    string fromport;
-    string buf;
-
-    buf.resize(32);
-
-    try {
-        libsocket::inet_dgram_server srv(host, port, LIBSOCKET_BOTH);
-
-        printf("Running socket on %s:%s", host.c_str(), port.c_str());
-
-        while (true) {
-            srv.rcvfrom(buf, from, fromport);
-
-            std::cout << "Datagram from " << from << ":" << fromport << " " << buf << std::endl;
-
-            srv.sndto(answer, from, fromport);
-        }
-
-        srv.destroy();
-    } catch (const libsocket::socket_exception &exc) {
-        std::cerr << exc.mesg;
-    }
-}
-
-int main() {
-    std::thread server_thread(server);
-
-    printf("RUNNING");
-
-    while (true) {
-        std::string command;
-        std::getline (std::cin, command);
-
-        printf("COMMAND => %s", command.c_str());
-
-        if(command == "q" || command == "quit") {
-            running = false;
-            break;
-        }
-    }
-
-    server_thread.join();
-}
-*/
