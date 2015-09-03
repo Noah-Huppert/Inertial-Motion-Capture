@@ -17,7 +17,7 @@ void start_server() {
     socket_fd = socket(AF_INET, SOCK_STREAM, 0);
 
     if (socket_fd < 0) {
-        std::cerr << "Error creating socket" << std::endl;
+        std::cerr << "Error creating socket(errno => " << strerror(errno) << ")" << std::endl;
         exit(EXIT_FAILURE);
     } else {
         std::cout << "Created socket(fd => " << socket_fd << ")" << std::endl;
@@ -28,7 +28,7 @@ void start_server() {
     int set_reuse_addr_result = setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, (char *) &resuse_addr, sizeof(resuse_addr));
 
     if (set_reuse_addr_result < 0) {
-        std::cerr << "Failed to set \"SO_REUSEADDR\"(fd => " << socket_fd << ")" << std::endl;
+        std::cerr << "Failed to set \"SO_REUSEADDR\"(fd => " << socket_fd << ", errno => " << strerror(errno) << ")" << std::endl;
     }
 
     // Bind socket
@@ -51,7 +51,7 @@ void start_server() {
     int listen_result = listen(socket_fd, socket_connection_backlog_size);
 
     if (listen_result < 0) {
-        std::cerr << "Error listening on socket" << std::endl;
+        std::cerr << "Error listening on socket(errno => " << strerror(errno) << ")" << std::endl;
         exit(EXIT_FAILURE);
     } else {
         std::cout << "Socket listening" << std::endl;
@@ -65,34 +65,43 @@ void stop_server() {
 }
 
 void socket_accept() {
+
     // Accept connection
+    bzero((char *) &client_address, sizeof(client_address));
+
     int client_len;
-    int client_socket_fd = accept(socket_fd, (struct sockaddr *) &client_address, (socklen_t * ) &client_len);
+    int client_socket_fd = accept(socket_fd, (struct sockaddr *) &client_address, (socklen_t *) &client_len);
 
     if (client_socket_fd < 0) {
-        std::cerr << "Failed to accept client connection" << std::endl;
+        std::cerr << "Failed to accept client connection(errno => " << strerror(errno) << ")" << std::endl;
         exit(EXIT_FAILURE);
     } else {
         std::cout << "Accepted client socket connection(fd => " << client_socket_fd << ")" << std::endl;
     }
 
-    // Receive content
-    const int receive_buffer_size = 256;
-    char receive_buffer[receive_buffer_size];
+    while(true) {
+        // Receive content
+        const int receive_buffer_size = 256;
+        char receive_buffer[receive_buffer_size];
 
-    bzero(receive_buffer, receive_buffer_size - 1);
+        bzero(receive_buffer, receive_buffer_size - 1);
 
-    int receive_result = recv(client_socket_fd, receive_buffer, receive_buffer_size - 1, 0);
+        int receive_result = recv(client_socket_fd, receive_buffer, receive_buffer_size - 1, 0);
 
-    if (receive_result < 0) {
-        std::cerr << "Failed to receive from client socket(fd => " << client_socket_fd << ")" << std::endl;
-    } else {
-        std::cout << "Received from client socket(fd => " << client_socket_fd << std::endl
-                  << "                     content => " << receive_buffer << ")" << std::endl;
+        if (receive_result < 0) {
+            std::cerr << "Failed to receive from client socket(fd => " << client_socket_fd << ", errno => " << strerror(errno) << ")"  << std::endl;
+        } else {
+            std::cout << "Received from client socket(fd => " << client_socket_fd << std::endl
+            << "                     content => " << receive_buffer << ")" << std::endl;
+        }
+
+        if(strcmp(receive_buffer, "EXIT") == 10) {
+            break;
+        }
+
+        // Send response
+        send(client_socket_fd, receive_buffer, receive_buffer_size - 1, 0);
     }
-
-    // Send response
-    send(client_socket_fd, receive_buffer, receive_buffer_size - 1, 0);
 
     close(client_socket_fd);
 
