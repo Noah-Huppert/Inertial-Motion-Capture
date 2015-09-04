@@ -1,0 +1,41 @@
+Initialize engine version: 5.1.3f1 (b0a23b31c3d8)
+GfxDevice: creating device client; threaded=1
+Direct3D:
+    Version:  Direct3D 11.0 [level 11.0]
+    Renderer: NVIDIA GeForce GTX 760 (ID=0x1187)
+    Vendor:   NVIDIA
+    VRAM:     1989 MB
+Begin MonoManager ReloadAssembly
+Platform assembly: C:\Users\noahh\Documents\Inertial-Motion-Capture\Inertial-Motion-Capture\Test_Data\Managed\UnityEngine.dll (this message is harmless)
+Loading C:\Users\noahh\Documents\Inertial-Motion-Capture\Inertial-Motion-Capture\Test_Data\Managed\UnityEngine.dll into Unity Child Domain
+Platform assembly: C:\Users\noahh\Documents\Inertial-Motion-Capture\Inertial-Motion-Capture\Test_Data\Managed\Assembly-CSharp.dll (this message is harmless)
+Loading C:\Users\noahh\Documents\Inertial-Motion-Capture\Inertial-Motion-Capture\Test_Data\Managed\Assembly-CSharp.dll into Unity Child Domain
+Platform assembly: C:\Users\noahh\Documents\Inertial-Motion-Capture\Inertial-Motion-Capture\Test_Data\Managed\UnityEngine.UI.dll (this message is harmless)
+Loading C:\Users\noahh\Documents\Inertial-Motion-Capture\Inertial-Motion-Capture\Test_Data\Managed\UnityEngine.UI.dll into Unity Child Domain
+Platform assembly: C:\Users\noahh\Documents\Inertial-Motion-Capture\Inertial-Motion-Capture\Test_Data\Managed\UnityEngine.Networking.dll (this message is harmless)
+Loading C:\Users\noahh\Documents\Inertial-Motion-Capture\Inertial-Motion-Capture\Test_Data\Managed\UnityEngine.Networking.dll into Unity Child Domain
+Platform assembly: C:\Users\noahh\Documents\Inertial-Motion-Capture\Inertial-Motion-Capture\Test_Data\Managed\UnityEngine.Analytics.dll (this message is harmless)
+Loading C:\Users\noahh\Documents\Inertial-Motion-Capture\Inertial-Motion-Capture\Test_Data\Managed\UnityEngine.Analytics.dll into Unity Child Domain
+Platform assembly: C:\Users\noahh\Documents\Inertial-Motion-Capture\Inertial-Motion-Capture\Test_Data\Managed\System.Core.dll (this message is harmless)
+- Completed reload, in  0.108 seconds
+desktop: 1920x1080 60Hz; virtual: 3840x1080 at 0,0
+<RI> Initializing input.
+<RI> Input initialized.
+<RI> Initialized touch support.
+Platform assembly: C:\Users\noahh\Documents\Inertial-Motion-Capture\Inertial-Motion-Capture\Test_Data\Managed\System.dll (this message is harmless)
+Connecting to socket server
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/UnityEngineDebugBindings.gen.cpp Line: 65)
+
+SocketException: A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond.
+
+  at System.Net.Sockets.Socket.Connect (System.Net.EndPoint remoteEP, Boolean requireSocketPolicy) [0x00000] in <filename unknown>:0 
+  at System.Net.Sockets.Socket.Connect (System.Net.EndPoint remoteEP) [0x00000] in <filename unknown>:0 
+  at System.Net.Sockets.TcpClient.Connect (System.Net.IPEndPoint remote_end_point) [0x00000] in <filename unknown>:0 
+  at System.Net.Sockets.TcpClient.Connect (System.Net.IPAddress[] ipAddresses, Int32 port) [0x00000] in <filename unknown>:0 
+ 
+(Filename:  Line: -1)
+
+Setting up 2 worker threads for Enlighten.
+  Thread -> id: a98 -> priority: 1 
+  Thread -> id: 1220 -> priority: 1 
