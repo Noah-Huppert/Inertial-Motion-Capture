@@ -95,12 +95,12 @@ void socket_accept() {
             << "                     content => " << receive_buffer << ")" << std::endl;
         }
 
-        if(strcmp(receive_buffer, "EXIT") == 10) {
-            break;
-        }
-
         // Send response
         send(client_socket_fd, receive_buffer, receive_buffer_size - 1, 0);
+
+        if(strcmp(receive_buffer, "EXIT") == 0) {
+            break;
+        }
     }
 
     close(client_socket_fd);
