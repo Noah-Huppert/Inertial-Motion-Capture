@@ -67,12 +67,15 @@ s8 I2C_routine() {
 
 s8 BNO055_I2C_bus_write(u8 dev_addr, u8 reg_addr, u8 *reg_data, u8 cnt) {
     s32 i2c_error = BNO055_ZERO_U8X;
+    u8 array[i2c_buffer_length];
+    u8 stringpos = BNO055_ZERO_U8X;
+    array[BNO055_ZERO_U8X;] = reg_addr;
+    for (stringpos = BNO055_ZERO_U8X; stringpos < cnt; stringpos++) {
+        array[stringpos + BNO055_ONE_U8X] = *(reg_data + stringpos);
+    }
 
-    u8 buffer[i2c_buffer_length];
-    u8 string_pos = BNO055_ZERO_U8X;
-
-    // TODO https://github.com/BoschSensortec/BNO055_driver/blob/master/bno055_support.c#L498
-    // TODO http://iotdk.intel.com/docs/master/mraa/classmraa_1_1_i2c.html
+    i2c->address(dev_addr);
+    i2c_error = i2c->write(array, cnt + 2);
 
     return (s8) i2c_error;
 }
