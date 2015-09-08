@@ -66,7 +66,6 @@ s8 I2C_routine() {
 }
 
 s8 BNO055_I2C_bus_write(u8 dev_addr, u8 reg_addr, u8 *reg_data, u8 cnt) {
-    s32 i2c_error = BNO055_ZERO_U8X;
     u8 array[i2c_buffer_length];
     u8 stringpos = BNO055_ZERO_U8X;
     array[BNO055_ZERO_U8X;] = reg_addr;
@@ -75,13 +74,32 @@ s8 BNO055_I2C_bus_write(u8 dev_addr, u8 reg_addr, u8 *reg_data, u8 cnt) {
     }
 
     i2c->address(dev_addr);
-    i2c_error = i2c->write(array, cnt + 2);
+    int i2c_write_result = i2c->write(array, cnt + 2);
 
-    return (s8) i2c_error;
+    if(i2c_write_result == MRAA_SUCCESS) {
+        return (s8) SUCCESS;
+    } else {
+        return (s8) ERROR;
+    }
 }
 
 s8 BNO055_I2C_bus_read(u8 dev_addr, u8 reg_addr, u8 *reg_data, u8 cnt) {
+    u8 array[i2c_buffer_length] = {BNO055_ZERO_U8X;};
+    u8 stringpos = BNO055_ZERO_U8X;
+    array[BNO055_ZERO_U8X;] = reg_addr;
 
+    i2c->address(dev_addr);
+    int i2c_bytes_read = i2c->read(array, cnt);
+
+    for (stringpos = BNO055_ZERO_U8X; stringpos < cnt; stringpos++) {
+        *(reg_data + stringpos) = array[stringpos];
+    }
+
+    if(i2c_bytes_read > 0) {
+        return (s8) SUCCESS;
+    } else {
+        return (s8) ERROR;
+    }
 }
 
 void BNO055_delay_msek(u32 msek) {
