@@ -5,12 +5,85 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "bno055.h"
+#include "mraa.hpp"
+
 /* Socket */
 int socket_fd = -1;
 int socket_port = 1234;
 
 struct sockaddr_in socket_address, client_address;
 const int socket_connection_backlog_size = 10;
+
+/* I2C */
+mraa::I2c *i2c(0);
+int i2c_buffer_length = 8;
+
+/* BNO055 */
+s8 BNO055_I2C_bus_read(u8 dev_addr, u8 reg_addr, u8 *reg_data, u8 cnt);
+s8 BNO055_I2C_bus_write(u8 dev_addr, u8 reg_addr, u8 *reg_data, u8 cnt);
+s8 I2C_routine();
+
+void BNO055_delay_msek(u32 msek);
+s32 bno055_read_data();
+
+struct bno055_t bno055;
+
+s32 bno055_read_data() {
+    I2C_routine();
+
+    // Init bno055
+    s32 comres = bno055_init(&bno055);
+    comres += bno055_set_power_mode(POWER_MODE_NORMAL);
+
+    comres += bno055_set_operation_mode(OPERATION_MODE_NDOF);
+
+    // Rotation
+    struct bno055_quaternion_t rotation_quaternion;
+
+    comres += bno055_read_quaternion_wxyz(&rotation_quaternion);
+
+    // Linear acceleration
+    struct bno055_linear_accel_t raw_linear_acceleration;
+    struct bno055_linear_accel_double_t linear_acceleration;
+
+    comres += bno055_read_linear_accel_xyz(&raw_linear_acceleration);
+    comres += bno055_convert_double_linear_accel_xyz_msq(&linear_acceleration);
+
+    // De-Init bno055
+    comres += bno055_set_power_mode(POWER_MODE_SUSPEND);
+
+    return comres;
+}
+
+s8 I2C_routine() {
+    bno055.bus_write = BNO055_I2C_bus_write;
+    bno055.bus_read = BNO055_I2C_bus_read;
+    bno055.delay_msec = BNO055_delay_msek;
+    bno055.dev_addr = BNO055_I2C_ADDR1;
+
+    return BNO055_ZERO_U8X;
+}
+
+s8 BNO055_I2C_bus_write(u8 dev_addr, u8 reg_addr, u8 *reg_data, u8 cnt) {
+    s32 i2c_error = BNO055_ZERO_U8X;
+
+    u8 buffer[i2c_buffer_length];
+    u8 string_pos = BNO055_ZERO_U8X;
+
+    // TODO https://github.com/BoschSensortec/BNO055_driver/blob/master/bno055_support.c#L498
+    // TODO http://iotdk.intel.com/docs/master/mraa/classmraa_1_1_i2c.html
+
+    return (s8) i2c_error;
+}
+
+s8 BNO055_I2C_bus_read(u8 dev_addr, u8 reg_addr, u8 *reg_data, u8 cnt) {
+
+}
+
+void BNO055_delay_msek(u32 msek) {
+    usleep(msek / 1000);
+}
 
 void start_server() {
     // Create socket
@@ -107,6 +180,8 @@ void socket_accept() {
 
     std::cout << "Closed client socket connection(fd => " << client_socket_fd << ")" << std::endl;
 }
+
+
 
 int main() {
     start_server();
