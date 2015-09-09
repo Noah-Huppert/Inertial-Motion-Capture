@@ -152,6 +152,13 @@ def run_helpers(*args):
         check_sshpass()
 
 # Commands
+def command_clean():
+    run_helpers("edison_info", "ssh_client")
+
+    log.i("Cleaning \"imc-server\"")
+
+    run_ssh_command("rm -rf /home/edison/imc-server")
+
 def command_push():
     run_helpers("edison_info", "ssh_client")
 
@@ -246,6 +253,7 @@ commands = sys.argv
 commands.pop(0)
 
 command_defs = OrderedDict([
+    ("clean", command_clean),
     ("build",
         OrderedDict([
             ("push", command_push),
