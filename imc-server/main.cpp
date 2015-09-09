@@ -6,7 +6,7 @@
 #include <unistd.h>
 
 #include "bno055.h"
-#include "mraa.hpp"
+//#include "mraa.hpp"
 
 /* Socket */
 int socket_fd = -1;
@@ -16,7 +16,7 @@ struct sockaddr_in socket_address, client_address;
 const int socket_connection_backlog_size = 10;
 
 /* I2C */
-mraa::I2c *i2c(0);
+//mraa::I2c *i2c(0);
 int i2c_buffer_length = 8;
 
 /* BNO055 */
@@ -30,6 +30,7 @@ s8 BNO055_I2C_bus_write(u8 dev_addr, u8 reg_addr, u8 *reg_data, u8 cnt) {
         array[stringpos + BNO055_ONE_U8X] = *(reg_data + stringpos);
     }
 
+    /*
     i2c->address(dev_addr);
     int i2c_write_result = i2c->write(array, cnt + 2);
 
@@ -38,6 +39,8 @@ s8 BNO055_I2C_bus_write(u8 dev_addr, u8 reg_addr, u8 *reg_data, u8 cnt) {
     } else {
         return (s8) ERROR;
     }
+     */
+    return (s8) ERROR;
 }
 
 s8 BNO055_I2C_bus_read(u8 dev_addr, u8 reg_addr, u8 *reg_data, u8 cnt) {
@@ -45,6 +48,7 @@ s8 BNO055_I2C_bus_read(u8 dev_addr, u8 reg_addr, u8 *reg_data, u8 cnt) {
     u8 stringpos = BNO055_ZERO_U8X;
     array[BNO055_ZERO_U8X] = reg_addr;
 
+    /*
     i2c->address(dev_addr);
     int i2c_bytes_read = i2c->read(array, cnt);
 
@@ -57,6 +61,8 @@ s8 BNO055_I2C_bus_read(u8 dev_addr, u8 reg_addr, u8 *reg_data, u8 cnt) {
     } else {
         return (s8) ERROR;
     }
+    */
+    return (s8) ERROR;
 }
 
 void BNO055_delay_msek(u32 msek) {

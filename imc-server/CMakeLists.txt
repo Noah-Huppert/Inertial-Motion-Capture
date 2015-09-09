@@ -10,23 +10,13 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -pthread")
 include(ExternalProject)
 
 # BNO055
-# -- Configure
-set(bno055_INSTALL_DIR ${CMAKE_BINARY_DIR}/lib)
-# -- Build
-externalProject_add(bno055
-        GIT_REPOSITORY    https://github.com/BoschSensortec/BNO055_driver.git
-        CONFIGURE_COMMAND :
-        BUILD_COMMAND     :
-        INSTALL_COMMAND   mkdir -p ${bno055_INSTALL_DIR} && cp -r ../bno055 ${bno055_INSTALL_DIR}
-)
-
-set(bno055_INSTALL_DIR ${bno055_INSTALL_DIR}/bno055)
-
 # -- Include
-include_directories(${bno055_INSTALL_DIR})
+include_directories(${CMAKE_SOURCE_DIR}/bno055)
+set(SOURCE_FILES ${SOURCE_FILES}
+        ${CMAKE_SOURCE_DIR}/bno055/bno055.c)
 
-# -- Create
-add_library(bno055-lib ${bno055_INSTALL_DIR}/bno055.c)
+# -- Build
+add_library(bno055 SHARED ${CMAKE_SOURCE_DIR}/bno055/bno055.c)
 
 # MRAA
 # -- Build
@@ -37,8 +27,10 @@ externalProject_add(mraa
 
 # Compile
 # -- Source
-set(SOURCE_FILES main.cpp)
+set(SOURCE_FILES ${SOURCE_FILES}
+        main.cpp)
 
 # -- Create
 add_executable(imc-server ${SOURCE_FILES})
-target_link_libraries(imc-server bno055-lib)
+target_link_libraries(imc-server ${CMAKE_BINARY_DIR}/libbno055.so)
+target_link_libraries(imc-server libmraa.so)
