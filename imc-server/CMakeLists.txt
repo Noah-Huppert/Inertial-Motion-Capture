@@ -10,12 +10,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -pthread")
 include(ExternalProject)
 
 # BNO055
-# -- Include
-include_directories(${CMAKE_SOURCE_DIR}/bno055)
-
-set(SOURCE_FILES ${SOURCE_FILES}
-        ${CMAKE_SOURCE_DIR}/bno055/bno055.h
-        ${CMAKE_SOURCE_DIR}/bno055/bno055.c)
+add_subdirectory(bno055)
 
 # MRAA
 # -- Build
@@ -33,3 +28,4 @@ set(SOURCE_FILES ${SOURCE_FILES}
 add_executable(imc-server ${SOURCE_FILES})
 add_dependencies(imc-server mraa)
 target_link_libraries(imc-server libmraa.so)
+target_link_libraries(imc-server bno055)

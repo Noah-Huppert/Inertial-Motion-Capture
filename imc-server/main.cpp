@@ -5,7 +5,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "bno055.h"
+#include "bno055/bno055.h"
 #include "mraa.hpp"
 
 /* Socket */
