@@ -32,3 +32,4 @@ set(SOURCE_FILES ${SOURCE_FILES}
 # -- Create
 add_executable(imc-server ${SOURCE_FILES})
 add_dependencies(imc-server mraa)
+target_link_libraries(imc-server libmraa.so)
