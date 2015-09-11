@@ -11,6 +11,7 @@ include(ExternalProject)
 
 # BNO055
 add_subdirectory(bno055)
+include_directories (${CMAKE_CURRENT_SOURCE_DIR}/bno055)
 
 # MRAA
 # -- Build
@@ -27,5 +28,5 @@ set(SOURCE_FILES ${SOURCE_FILES}
 # -- Create
 add_executable(imc-server ${SOURCE_FILES})
 add_dependencies(imc-server mraa)
-target_link_libraries(imc-server libmraa.so)
+target_link_libraries(imc-server /usr/local/lib/libmraa.so)
 target_link_libraries(imc-server bno055)

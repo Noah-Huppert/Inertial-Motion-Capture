@@ -5,7 +5,10 @@
 #include <string.h>
 #include <unistd.h>
 
+extern "C" {
 #include "bno055/bno055.h"
+}
+
 #include "mraa.hpp"
 
 /* Socket */

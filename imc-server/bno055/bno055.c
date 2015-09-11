@@ -75,7 +75,7 @@ static struct bno055_t *p_bno055;
  *
  *	@return results of bus communication function
  *	@retval 0 -> Success
- *	@retval 1 -> Error
+ *	@retval 1 -> Error${CMAKE_CURRENT_SOURCE_DIR}/bno055.c${CMAKE_CURRENT_SOURCE_DIR}/bno055.c
  *
  *	@note While changing the parameter of the bno055_t
  *	consider the following point:
