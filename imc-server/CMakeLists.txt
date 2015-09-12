@@ -10,23 +10,23 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -pthread")
 include(ExternalProject)
 
 # BNO055
-add_subdirectory(bno055)
-include_directories (${CMAKE_CURRENT_SOURCE_DIR}/bno055)
+add_subdirectory(bno055-driver)
 
-# MRAA
-# -- Build
-externalProject_add(mraa
-        GIT_REPOSITORY https://github.com/intel-iot-devkit/mraa.git
-        GIT_TAG        v0.7.5
-)
 
 # Compile
 # -- Source
 set(SOURCE_FILES ${SOURCE_FILES}
+        status.h
+
+        quaternion.hpp
+        vector3.hpp
+
+        imu.hpp
+        imu.cpp
+
         main.cpp)
 
 # -- Create
 add_executable(imc-server ${SOURCE_FILES})
-add_dependencies(imc-server mraa)
-target_link_libraries(imc-server /usr/local/lib/libmraa.so)
-target_link_libraries(imc-server bno055)
+target_link_libraries(imc-server /usr/lib/libmraa.so)
+target_link_libraries(imc-server bno055-driver)

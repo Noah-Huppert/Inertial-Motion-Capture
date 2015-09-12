@@ -70,12 +70,12 @@ static struct bno055_t *p_bno055;
  *	mag revision id, software revision id, boot loader
  *	revision id and page id
  *
- *	@param  bno055 - structure pointer
+ *	@param  bno055-driver - structure pointer
  *
  *
  *	@return results of bus communication function
  *	@retval 0 -> Success
- *	@retval 1 -> Error${CMAKE_CURRENT_SOURCE_DIR}/bno055.c${CMAKE_CURRENT_SOURCE_DIR}/bno055.c
+ *	@retval 1 -> Error${CMAKE_CURRENT_SOURCE_DIR}/bno055-driver.c${CMAKE_CURRENT_SOURCE_DIR}/bno055-driver.c
  *
  *	@note While changing the parameter of the bno055_t
  *	consider the following point:
@@ -96,7 +96,7 @@ BNO055_RETURN_FUNCTION_TYPE bno055_init(struct bno055_t *bno055)
 	*/
 	u8 a_SW_ID_u8[ARRAY_SIZE_TWO] = {
 	BNO055_ZERO_U8X, BNO055_ZERO_U8X};
-	/* stuct parameters are assign to bno055*/
+	/* stuct parameters are assign to bno055-driver*/
 	p_bno055 = bno055;
 	/* Write the default page as zero*/
 	com_rslt = p_bno055->BNO055_BUS_WRITE_FUNC

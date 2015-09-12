@@ -5,11 +5,7 @@
 #include <string.h>
 #include <unistd.h>
 
-extern "C" {
-#include "bno055/bno055.h"
-}
-
-#include "mraa.hpp"
+#include "imu.hpp"
 
 /* Socket */
 int socket_fd = -1;
@@ -18,69 +14,14 @@ int socket_port = 1234;
 struct sockaddr_in socket_address, client_address;
 const int socket_connection_backlog_size = 10;
 
-/* I2C */
-mraa::I2c *i2c(0);
-int i2c_buffer_length = 8;
+IMU *imu;
 
-/* BNO055 */
-struct bno055_t bno055;
 
-s8 BNO055_I2C_bus_write(u8 dev_addr, u8 reg_addr, u8 *reg_data, u8 cnt) {
-    u8 array[i2c_buffer_length];
-    u8 stringpos = BNO055_ZERO_U8X;
-    array[BNO055_ZERO_U8X] = reg_addr;
-    for (stringpos = BNO055_ZERO_U8X; stringpos < cnt; stringpos++) {
-        array[stringpos + BNO055_ONE_U8X] = *(reg_data + stringpos);
-    }
-
-    i2c->address(dev_addr);
-    int i2c_write_result = i2c->write(array, cnt + 2);
-
-    if(i2c_write_result == MRAA_SUCCESS) {
-        return (s8) SUCCESS;
-    } else {
-        return (s8) ERROR;
-    }
-    return (s8) ERROR;
-}
-
-s8 BNO055_I2C_bus_read(u8 dev_addr, u8 reg_addr, u8 *reg_data, u8 cnt) {
-    u8 array[i2c_buffer_length];
-    u8 stringpos = BNO055_ZERO_U8X;
-    array[BNO055_ZERO_U8X] = reg_addr;
-
-    i2c->address(dev_addr);
-    int i2c_bytes_read = i2c->read(array, cnt);
-
-    for (stringpos = BNO055_ZERO_U8X; stringpos < cnt; stringpos++) {
-        *(reg_data + stringpos) = array[stringpos];
-    }
-
-    if(i2c_bytes_read > 0) {
-        return (s8) SUCCESS;
-    } else {
-        return (s8) ERROR;
-    }
-    return (s8) ERROR;
-}
-
-void BNO055_delay_msek(u32 msek) {
-    usleep(msek / 1000);
-}
-
-s8 I2C_routine() {
-    bno055.bus_write = BNO055_I2C_bus_write;
-    bno055.bus_read = BNO055_I2C_bus_read;
-    bno055.delay_msec = BNO055_delay_msek;
-    bno055.dev_addr = BNO055_I2C_ADDR1;
-
-    return BNO055_ZERO_U8X;
-}
-
+/*
 s32 bno055_read_data() {
     I2C_routine();
 
-    // Init bno055
+    // Init bno055-driver
     s32 comres = bno055_init(&bno055);
     comres += bno055_set_power_mode(POWER_MODE_NORMAL);
 
@@ -98,11 +39,12 @@ s32 bno055_read_data() {
     comres += bno055_read_linear_accel_xyz(&raw_linear_acceleration);
     comres += bno055_convert_double_linear_accel_xyz_msq(&linear_acceleration);
 
-    // De-Init bno055
+    // De-Init bno055-driver
     comres += bno055_set_power_mode(POWER_MODE_SUSPEND);
 
     return comres;
 }
+*/
 
 void start_server() {
     // Create socket
@@ -161,7 +103,7 @@ void socket_accept() {
     // Accept connection
     bzero((char *) &client_address, sizeof(client_address));
 
-    int client_len;
+    socklen_t client_len = sizeof(client_address);
     int client_socket_fd = accept(socket_fd, (struct sockaddr *) &client_address, (socklen_t *) &client_len);
 
     if (client_socket_fd < 0) {
@@ -192,6 +134,9 @@ void socket_accept() {
 
         if(strcmp(receive_buffer, "EXIT") == 0) {
             break;
+        } else if(strcmp(receive_buffer, "NEXT") == 0) {
+            imu->update_rotation();
+            std::cout << "rotation = " << imu->rotation.to_string() << std::endl;
         }
     }
 
@@ -200,15 +145,43 @@ void socket_accept() {
     std::cout << "Closed client socket connection(fd => " << client_socket_fd << ")" << std::endl;
 }
 
-
+#include "mraa.h"
+#include "mraa.hpp"
 
 int main() {
+    imu = new IMU();
+    imu->start();
+
     start_server();
 
     std::thread socket_accept_thread(socket_accept);
     socket_accept_thread.join();
 
     stop_server();
+
+    delete imu;
+
+    /*
+    mraa::I2c *i2c = new mraa::I2c(1);
+
+    std::cout << "ADDRESS 0x01 = " << i2c->address(0x29) << std::endl;
+
+    u8 write_buffer[8];
+    bzero(write_buffer,  8);
+
+    write_buffer[0] = 0x00;
+    write_buffer[1] = 0xAF;
+    write_buffer[2] = 0x00;
+    write_buffer[3] = 0xAF;
+    write_buffer[4] = 0x00;
+    write_buffer[5] = 0xAF;
+    write_buffer[6] = 0x00;
+    write_buffer[7] = 0xAF;
+
+    std::cout << "WRITE => " << i2c->write(write_buffer, 8) << std::endl;
+    delete i2c;
+    */
+
 
     return EXIT_SUCCESS;
 }

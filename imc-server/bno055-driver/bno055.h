@@ -52,7 +52,7 @@
 * No license is granted by implication or otherwise under any patent or
 * patent rights of the copyright holder.
 **************************************************************************/
-/*! \file bno055.h
+/*! \file bno055-driver.h
     \brief BNO055 Sensor Driver Support Header File */
 
 #ifndef __BNO055_H__
@@ -314,7 +314,7 @@ bus_read(dev_addr, reg_addr, reg_data, r_len)
 /********************************************************/
 /**\name	I2C ADDRESS DEFINITION FOR BNO055           */
 /********************************************************/
-/* bno055 I2C Address */
+/* bno055-driver I2C Address */
 #define BNO055_I2C_ADDR1                0x28
 #define BNO055_I2C_ADDR2                0x29
 
@@ -512,17 +512,17 @@ bus_read(dev_addr, reg_addr, reg_data, r_len)
 /**\name	STRUCTURE DEFINITIONS                         */
 /**************************************************************/
 /*!
-*	@brief bno055 struct
+*	@brief bno055-driver struct
 */
 struct bno055_t {
-u8 chip_id;/**< chip_id of bno055 */
-u16 sw_rev_id;/**< software revision id of bno055 */
-u8 page_id;/**< page_id of bno055 */
-u8 accel_rev_id;/**< accel revision id of bno055 */
-u8 mag_rev_id;/**< mag revision id of bno055 */
-u8 gyro_rev_id;/**< gyro revision id of bno055 */
-u8 bl_rev_id;/**< boot loader revision id of bno055 */
-u8 dev_addr;/**< i2c device address of bno055 */
+u8 chip_id;/**< chip_id of bno055-driver */
+u16 sw_rev_id;/**< software revision id of bno055-driver */
+u8 page_id;/**< page_id of bno055-driver */
+u8 accel_rev_id;/**< accel revision id of bno055-driver */
+u8 mag_rev_id;/**< mag revision id of bno055-driver */
+u8 gyro_rev_id;/**< gyro revision id of bno055-driver */
+u8 bl_rev_id;/**< boot loader revision id of bno055-driver */
+u8 dev_addr;/**< i2c device address of bno055-driver */
 BNO055_WR_FUNC_PTR;/**< bus write function pointer */
 BNO055_RD_FUNC_PTR;/**<bus read function pointer */
 void (*delay_msec)(BNO055_MDELAY_DATA_TYPE);/**< delay function pointer */
@@ -2131,7 +2131,7 @@ GYRO_ANY_MOTION_THRES_ADDR
  *	mag revision id, software revision id, boot loader
  *	revision id and page id
  *
- *	@param  bno055 - structure pointer
+ *	@param  bno055-driver - structure pointer
  *
  *
  *	@return results of bus communication function

@@ -157,7 +157,7 @@ def command_clean():
 
     log.i("Cleaning \"imc-server\"")
 
-    run_ssh_command("rm -rf /home/edison/imc-server")
+    run_ssh_command("rm -rf /home/root/imc-server")
 
 def command_push():
     run_helpers("edison_info", "ssh_client")
@@ -169,10 +169,10 @@ def command_push():
     for (dir_path, dir_names, filenames) in os.walk("imc-server"):
         for filename in filenames:
             local_path = os.path.join(dir_path, filename)
-            server_path = os.path.join("/home/edison", local_path)
+            server_path = os.path.join("/home/root", local_path)
 
             try:
-                sftp.mkdir("/home/edison/{0}".format(dir_path))
+                sftp.mkdir("/home/root/{0}".format(dir_path))
             except:
                 pass
 
@@ -190,7 +190,7 @@ def command_compile():
 
     log.i("Compiling \"imc-server\"")
 
-    compile_exit_code = run_ssh_command("mkdir -p /home/edison/imc-server/build && cd /home/edison/imc-server/build && cmake .. && make")
+    compile_exit_code = run_ssh_command("mkdir -p /home/root/imc-server/build && cd /home/root/imc-server/build && /home/root/cmake-3.3.1-Linux-i386/bin/cmake .. && make")
 
     if compile_exit_code != 0:
         log.e("Failed to compile \"imc-server\"")
@@ -199,7 +199,7 @@ def command_compile():
 def command_run():
     log.i("Running \"imc-server\"")
 
-    run_ssh_command("cd /home/edison/imc-server/build && ./imc-server")
+    run_ssh_command("cd /home/root/imc-server/build && ./imc-server")
 
 def command_kill():
     log.i("Killing \"imc-server\"")
