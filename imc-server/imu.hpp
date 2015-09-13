@@ -13,6 +13,7 @@ extern "C" {
 
 #include "status.h"
 #include "log.h"
+#include "imc_time.hpp"
 
 #include "quaternion.hpp"
 #include "vector3.hpp"
@@ -36,6 +37,8 @@ public:
     int update();
 
 private:
+    long last_position_update_time = -1;
+
     bool bno055_driver_bound = false;
     bool bno055_initialized = false;
     bool bno055_power_mode_normal = false;

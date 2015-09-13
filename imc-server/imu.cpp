@@ -99,16 +99,31 @@ int IMU::update_rotation() {
 }
 
 int IMU::update_position() {
+    if(last_position_update_time == -1) {
+        last_position_update_time = imc_time();
+    }
     if(!is_ready()) {
         std::cerr << TAG_ERROR << "Failed to update position, bno055 not ready" << std::endl;
         return IMC_FAIL;
     }
 
     // Get Linear Acceleration
-    std::cout << TAG_DEBUG << std::chrono::system_clock::now().time_since_epoch().count() << std::endl;
+    struct bno055_linear_accel_double_t linear_acceleration;
+
+    int get_linear_acceleration_result = bno055_convert_double_linear_accel_xyz_msq(&linear_acceleration);
+
+    if(get_linear_acceleration_result < 0) {
+        std::cout << TAG_ERROR << "Failed to get converted linear accleration" << std::endl;
+        return IMC_FAIL;
+    }
+
+    // Integrate
+    long delta_time = imc_time() - last_position_update_time;
 
     position_lock.lock();
-    // Integrate
+    position.x = delta_time * linear_acceleration.x;
+    position.y = delta_time * linear_acceleration.y;
+    position.z = delta_time * linear_acceleration.z;
     position_lock.unlock();
 
     return IMC_SUCCESS;

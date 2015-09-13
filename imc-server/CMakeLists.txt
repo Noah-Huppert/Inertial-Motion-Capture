@@ -19,6 +19,9 @@ set(SOURCE_FILES ${SOURCE_FILES}
         status.h
         log.h
 
+        imc_time.hpp
+        imc_time.cpp
+
         quaternion.hpp
         vector3.hpp
 

@@ -5,10 +5,11 @@
 
 #include "socket_server.hpp"
 #include "imu.hpp"
+#include "imc_time.hpp"
 
 std::mutex imu_lock;
 IMU *imu;
-long imu_update_interval = 1000;
+long imu_update_interval = 10;
 
 std::mutex running_lock;
 bool running = true;
@@ -69,26 +70,21 @@ void socket_server_accept() {
 }
 
 void imu_update() {
-    long now = std::chrono::system_clock::now().time_since_epoch().count();
-    long last_update = now;
+    long last_update = imc_time();
 
     while(true) {
-        now = std::chrono::system_clock::now().time_since_epoch().count();
-
-        if(now - last_update >= imu_update_interval) {
+        if(imc_time() - last_update >= imu_update_interval) {
             running_lock.lock();
             if (!running) {
                 break;
             }
             running_lock.unlock();
 
-            std::cout << TAG_DEBUG << "Updating" << now - last_update <<  std::endl;
-
             imu_lock.lock();
             imu->update();
             imu_lock.unlock();
 
-            last_update = now;
+            last_update = imc_time();
         }
     }
 }
