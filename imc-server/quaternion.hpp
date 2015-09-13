@@ -12,9 +12,9 @@ struct Quaternion {
 
     Quaternion(): w(0), x(0), y(0), z(0) {}
 
-    std::string to_string() {
+    std::string to_space_delimited() {
         std::stringstream stream;
-        stream << "(" << w << ", " << x << ", " << y << ", " << z << ")";
+        stream << w << " " << x << " " << y << " " << z;
         return stream.str();
     }
 };

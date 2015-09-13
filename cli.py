@@ -197,7 +197,11 @@ def command_compile():
         sys.exit(0)
 
 def command_run():
+    run_helpers("edison_info", "ssh_client")
+
     log.i("Running \"imc-server\"")
+
+    print("--------------------")
 
     run_ssh_command("cd /home/root/imc-server/build && ./imc-server")
 
@@ -221,7 +225,7 @@ def command_kill():
 
     netstat_out = netstat_out.decode("utf-8")
 
-    pid_exp = re.compile("(\d\d\d\d)\/imc-server")
+    pid_exp = re.compile("(\d{0,4})\/imc-server")
     pid_match = re.search(pid_exp, netstat_out)
 
     try:

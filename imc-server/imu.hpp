@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <chrono>
+#include <mutex>
 
 extern "C" {
 #include "bno055.h"
@@ -11,17 +12,21 @@ extern "C" {
 #include "mraa.hpp"
 
 #include "status.h"
+#include "log.h"
 
 #include "quaternion.hpp"
 #include "vector3.hpp"
 
 class IMU {
 public:
+    std::mutex rotation_lock;
     Quaternion rotation;
+
+    std::mutex position_lock;
     Vector3 position;
 
-    IMU();
-    ~IMU();
+    IMU() {};
+    ~IMU() {};
 
     int start();
     int stop();

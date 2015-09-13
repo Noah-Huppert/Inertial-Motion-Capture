@@ -1,187 +1,105 @@
 #include <iostream>
 #include <thread>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <string.h>
-#include <unistd.h>
+#include <mutex>
+#include <sstream>
 
+#include "socket_server.hpp"
 #include "imu.hpp"
 
-/* Socket */
-int socket_fd = -1;
-int socket_port = 1234;
-
-struct sockaddr_in socket_address, client_address;
-const int socket_connection_backlog_size = 10;
-
+std::mutex imu_lock;
 IMU *imu;
 
+class IMUSocketServer: public SocketServer {
+public:
+    IMUSocketServer(): SocketServer() {}
+    IMUSocketServer(int port): SocketServer(port) {}
 
-/*
-s32 bno055_read_data() {
-    I2C_routine();
+    void handle_client_socket(int client_socket_fd) {
+        int buffer_size = 256;
+        char receive_buffer[buffer_size];
+        char send_buffer[buffer_size];
 
-    // Init bno055-driver
-    s32 comres = bno055_init(&bno055);
-    comres += bno055_set_power_mode(POWER_MODE_NORMAL);
+        while(true) {
+            SocketServer::socket_receive(client_socket_fd, receive_buffer, buffer_size);
 
-    comres += bno055_set_operation_mode(OPERATION_MODE_NDOF);
+            bzero(send_buffer, buffer_size);
 
-    // Rotation
-    struct bno055_quaternion_t rotation_quaternion;
+            if(strcmp(receive_buffer, "EXIT") == 0) {
+                break;
+            } else if(strcmp(receive_buffer, "NEXT") == 0) {
+                /*
+                 * Send data in the following format
+                 * position.x position.y position.z rotation.w rotation.x rotation.y rotation.z
+                 */
 
-    comres += bno055_read_quaternion_wxyz(&rotation_quaternion);
+                std::stringstream out_stream;
 
-    // Linear acceleration
-    struct bno055_linear_accel_t raw_linear_acceleration;
-    struct bno055_linear_accel_double_t linear_acceleration;
+                imu_lock.lock();
 
-    comres += bno055_read_linear_accel_xyz(&raw_linear_acceleration);
-    comres += bno055_convert_double_linear_accel_xyz_msq(&linear_acceleration);
+                imu->position_lock.lock();
+                out_stream << imu->position.to_space_delimited() << " ";
+                imu->position_lock.unlock();
 
-    // De-Init bno055-driver
-    comres += bno055_set_power_mode(POWER_MODE_SUSPEND);
+                imu->rotation_lock.lock();
+                out_stream << imu->rotation.to_space_delimited();
+                imu->rotation_lock.unlock();
 
-    return comres;
-}
-*/
+                imu_lock.unlock();
 
-void start_server() {
-    // Create socket
-    socket_fd = socket(AF_INET, SOCK_STREAM, 0);
+                std::string temp_out = out_stream.str();
+                strncpy(send_buffer, temp_out.c_str(), buffer_size);
 
-    if (socket_fd < 0) {
-        std::cerr << "Error creating socket(errno => " << strerror(errno) << ")" << std::endl;
-        exit(EXIT_FAILURE);
-    } else {
-        std::cout << "Created socket(fd => " << socket_fd << ")" << std::endl;
-    }
-
-    // Tell socket to reuse address
-    int resuse_addr = 1;
-    int set_reuse_addr_result = setsockopt(socket_fd, SOL_SOCKET, SO_REUSEADDR, (char *) &resuse_addr, sizeof(resuse_addr));
-
-    if (set_reuse_addr_result < 0) {
-        std::cerr << "Failed to set \"SO_REUSEADDR\"(fd => " << socket_fd << ", errno => " << strerror(errno) << ")" << std::endl;
-    }
-
-    // Bind socket
-    bzero((char *) &socket_address, sizeof(socket_address));
-
-    socket_address.sin_family = AF_INET;
-    socket_address.sin_addr.s_addr = INADDR_ANY;
-    socket_address.sin_port = htons(socket_port);
-
-    int bind_result = bind(socket_fd, (struct sockaddr *) &socket_address, sizeof(socket_address));
-
-    if (bind_result < 0) {
-        std::cerr << "Error binding socket(errno => " << strerror(errno) << ")" << std::endl;
-        exit(EXIT_FAILURE);
-    } else {
-        std::cout << "Bound socket(port => " << socket_port << ")" << std::endl;
-    }
-
-    // Listen on address
-    int listen_result = listen(socket_fd, socket_connection_backlog_size);
-
-    if (listen_result < 0) {
-        std::cerr << "Error listening on socket(errno => " << strerror(errno) << ")" << std::endl;
-        exit(EXIT_FAILURE);
-    } else {
-        std::cout << "Socket listening" << std::endl;
-    }
-}
-
-void stop_server() {
-    close(socket_fd);
-
-    std::cout << "Closed socket(fd => " << socket_fd << ")" << std::endl;
-}
-
-void socket_accept() {
-
-    // Accept connection
-    bzero((char *) &client_address, sizeof(client_address));
-
-    socklen_t client_len = sizeof(client_address);
-    int client_socket_fd = accept(socket_fd, (struct sockaddr *) &client_address, (socklen_t *) &client_len);
-
-    if (client_socket_fd < 0) {
-        std::cerr << "Failed to accept client connection(errno => " << strerror(errno) << ")" << std::endl;
-        exit(EXIT_FAILURE);
-    } else {
-        std::cout << "Accepted client socket connection(fd => " << client_socket_fd << ")" << std::endl;
-    }
-
-    while(true) {
-        // Receive content
-        const int receive_buffer_size = 256;
-        char receive_buffer[receive_buffer_size];
-
-        bzero(receive_buffer, receive_buffer_size - 1);
-
-        int receive_result = recv(client_socket_fd, receive_buffer, receive_buffer_size - 1, 0);
-
-        if (receive_result < 0) {
-            std::cerr << "Failed to receive from client socket(fd => " << client_socket_fd << ", errno => " << strerror(errno) << ")"  << std::endl;
-        } else {
-            std::cout << "Received from client socket(fd => " << client_socket_fd << std::endl
-            << "                     content => " << receive_buffer << ")" << std::endl;
-        }
-
-        // Send response
-        send(client_socket_fd, receive_buffer, receive_buffer_size - 1, 0);
-
-        if(strcmp(receive_buffer, "EXIT") == 0) {
-            break;
-        } else if(strcmp(receive_buffer, "NEXT") == 0) {
-            imu->update_rotation();
-            std::cout << "rotation = " << imu->rotation.to_string() << std::endl;
+                std::cout << TAG_DEBUG << "send_buffer = " << send_buffer << std::endl;
+            }
+            SocketServer::socket_send(client_socket_fd, send_buffer, buffer_size);
         }
     }
+};
 
-    close(client_socket_fd);
+IMUSocketServer *socket_server;
 
-    std::cout << "Closed client socket connection(fd => " << client_socket_fd << ")" << std::endl;
+void socket_server_accept() {
+    socket_server->accept_connection();
 }
 
-#include "mraa.h"
-#include "mraa.hpp"
+void imu_update() {
+
+}
 
 int main() {
+    // Create Objects
+    imu_lock.lock();
     imu = new IMU();
+    imu_lock.unlock();
+
+    socket_server = new IMUSocketServer(1234);
+
+    // Start Objects
+    imu_lock.lock();
     imu->start();
+    imu_lock.unlock();
 
-    start_server();
+    socket_server->start();
 
-    std::thread socket_accept_thread(socket_accept);
-    socket_accept_thread.join();
+    // Create Threads
+    std::thread socket_server_accept_thread(socket_server_accept);
+    std::thread imu_update_thread(imu_update);
 
-    stop_server();
+    // Join Threads
+    socket_server_accept_thread.join();
+    imu_update_thread.join();
 
+    // Stop Objects
+    socket_server->stop();
+
+    imu_lock.lock();
+    imu->stop();
+    imu_lock.unlock();
+
+
+    // Delete Objects
+    delete socket_server;
     delete imu;
-
-    /*
-    mraa::I2c *i2c = new mraa::I2c(1);
-
-    std::cout << "ADDRESS 0x01 = " << i2c->address(0x29) << std::endl;
-
-    u8 write_buffer[8];
-    bzero(write_buffer,  8);
-
-    write_buffer[0] = 0x00;
-    write_buffer[1] = 0xAF;
-    write_buffer[2] = 0x00;
-    write_buffer[3] = 0xAF;
-    write_buffer[4] = 0x00;
-    write_buffer[5] = 0xAF;
-    write_buffer[6] = 0x00;
-    write_buffer[7] = 0xAF;
-
-    std::cout << "WRITE => " << i2c->write(write_buffer, 8) << std::endl;
-    delete i2c;
-    */
-
 
     return EXIT_SUCCESS;
 }

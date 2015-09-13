@@ -9,10 +9,6 @@ s8 bno055_driver_i2c_read(u8 dev_addr, u8 reg_addr, u8 *reg_data, u8 cnt);
 void bno055_driver_delay(u32 msek);
 
 /* IMU Class specific functions */
-IMU::IMU() {}
-
-IMU::~IMU() {}
-
 int IMU::start() {
     if(!bno055_driver_bound) {
         bno055_driver_bind();
@@ -23,8 +19,8 @@ int IMU::start() {
     if(!bno055_initialized) {
         s8 bno055_init_result = bno055_init(&bno055);
 
-        if(bno055_init_result < 0) {
-            std::cerr << "Failed to bno055_init => " << bno055_init_result << std::endl;
+        if((int) bno055_init_result < 0) {
+            std::cerr << TAG_ERROR << "Failed to bno055_init => " << bno055_init_result << std::endl;
             return IMC_FAIL;
         }
 
@@ -35,7 +31,7 @@ int IMU::start() {
         int bno055_power_mode_result = bno055_set_power_mode(POWER_MODE_NORMAL);
 
         if(bno055_power_mode_result < 0) {
-            std::cerr << "Failed to set bno055 power mode to normal" << std::endl;
+            std::cerr << TAG_ERROR << "Failed to set bno055 power mode to normal" << std::endl;
             return IMC_FAIL;
         }
 
@@ -46,7 +42,7 @@ int IMU::start() {
         int bno055_set_operation_mode_result = bno055_set_operation_mode(OPERATION_MODE_NDOF);
 
         if(bno055_set_operation_mode_result < 0) {
-            std::cerr << "Failed to set bno055 operation mode to ndof" << std::endl;
+            std::cerr << TAG_ERROR << "Failed to set bno055 operation mode to ndof" << std::endl;
             return IMC_FAIL;
         }
 
@@ -61,7 +57,7 @@ int IMU::stop() {
         int bno055_set_power_mode_result = bno055_set_power_mode(POWER_MODE_SUSPEND);
 
         if(bno055_set_power_mode_result < 0) {
-            std::cerr << "Failed to set bno055 power mode to suspend" << std::endl;
+            std::cerr << TAG_ERROR << "Failed to set bno055 power mode to suspend" << std::endl;
             return IMC_FAIL;
         }
 
@@ -79,7 +75,7 @@ bool IMU::is_ready() {
 
 int IMU::update_rotation() {
     if(!is_ready()) {
-        std::cerr << "Failed to update rotation, bno055 not ready" << std::endl;
+        std::cerr << TAG_ERROR << "Failed to update rotation, bno055 not ready" << std::endl;
         return IMC_FAIL;
     }
 
@@ -88,26 +84,32 @@ int IMU::update_rotation() {
     int bno055_read_quaternion_result =  bno055_read_quaternion_wxyz(&rotation_quaternion);
 
     if(bno055_read_quaternion_result != SUCCESS) {
-        std::cerr << "Failed to read bno055 quaternion" << std::endl;
+        std::cerr << TAG_ERROR << "Failed to read bno055 quaternion" << std::endl;
         return IMC_FAIL;
     }
 
+    rotation_lock.lock();
     rotation.w = rotation_quaternion.w;
     rotation.x = rotation_quaternion.x;
     rotation.y = rotation_quaternion.y;
     rotation.z = rotation_quaternion.z;
+    rotation_lock.unlock();
 
     return IMC_SUCCESS;
 }
 
 int IMU::update_position() {
     if(!is_ready()) {
-        std::cerr << "Failed to update position, bno055 not ready" << std::endl;
+        std::cerr << TAG_ERROR << "Failed to update position, bno055 not ready" << std::endl;
         return IMC_FAIL;
     }
 
     // Get Linear Acceleration
-    std::cout << std::chrono::system_clock::now().time_since_epoch().count() << std::endl;
+    std::cout << TAG_DEBUG << std::chrono::system_clock::now().time_since_epoch().count() << std::endl;
+
+    position_lock.lock();
+    // Integrate
+    position_lock.unlock();
 
     return IMC_SUCCESS;
 }
@@ -145,10 +147,8 @@ s8 bno055_driver_i2c_write(u8 dev_addr, u8 reg_addr, u8 *reg_data, u8 cnt) {
     int i2c_write_result = i2c->write(write_buffer, i2c_buffer_length);
 
     if(i2c_write_result == MRAA_SUCCESS) {
-        std::cout << "WRITE SUCCESS" << std::endl;
         return (s8) SUCCESS;
     } else {
-        std::cout << "WRITE FAIL" << std::endl;
         return (s8) ERROR;
     }
 /*
@@ -185,10 +185,8 @@ s8 bno055_driver_i2c_read(u8 dev_addr, u8 reg_addr, u8 *reg_data, u8 cnt) {
     }
 
     if(bytes_read > 0) {
-        std::cout << "READ SUCCESS" << std::endl;
         return (s8) SUCCESS;
     } else {
-        std::cout << "READ FAIL" << std::endl;
         return (s8) ERROR;
     }
     /*

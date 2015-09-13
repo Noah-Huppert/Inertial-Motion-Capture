@@ -17,9 +17,13 @@ add_subdirectory(bno055-driver)
 # -- Source
 set(SOURCE_FILES ${SOURCE_FILES}
         status.h
+        log.h
 
         quaternion.hpp
         vector3.hpp
+
+        socket_server.hpp
+        socket_server.cpp
 
         imu.hpp
         imu.cpp
