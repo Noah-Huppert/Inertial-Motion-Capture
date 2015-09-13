@@ -134,82 +134,37 @@ void IMU::bno055_driver_bind() {
 }
 
 s8 bno055_driver_i2c_write(u8 dev_addr, u8 reg_addr, u8 *reg_data, u8 cnt) {
-    u8 write_buffer[i2c_buffer_length];
-    bzero(write_buffer,  8);
+    i2c->address(dev_addr);
+
+    u8 write_buffer[cnt + 1];
 
     write_buffer[0] = reg_addr;
 
-    for(int i = 0; i < cnt; i ++) {
-        write_buffer[i + 1] = *(reg_data + i);
+    for(int i = 0; i < cnt; i++) {
+        write_buffer[i + 1] = reg_data[i];
     }
 
-    i2c->address(dev_addr);
-    int i2c_write_result = i2c->write(write_buffer, i2c_buffer_length);
+    int write_status = i2c->write(write_buffer, cnt + 1);
 
-    if(i2c_write_result == MRAA_SUCCESS) {
-        return (s8) SUCCESS;
+    if(write_status == MRAA_SUCCESS) {
+        return SUCCESS;
     } else {
-        return (s8) ERROR;
+        return ERROR;
     }
-/*
-    u8 array[i2c_buffer_length];
-    u8 stringpos = BNO055_ZERO_U8X;
-    array[BNO055_ZERO_U8X] = reg_addr;
-    for (stringpos = BNO055_ZERO_U8X; stringpos < cnt; stringpos++) {
-        array[stringpos + BNO055_ONE_U8X] = *(reg_data + stringpos);
-    }
-
-    i2c->address(dev_addr);
-    int i2c_write_result = i2c->write(array, i2c_buffer_length);
-
-    if(i2c_write_result == MRAA_SUCCESS) {
-        std::cout << "WRITE SUCCESS" << std::endl;
-        return (s8) SUCCESS;
-    } else {
-        std::cout << "WRITE FAIL " << i2c_write_result << std::endl;
-        return (s8) ERROR;
-    }
-*/
 }
 
 s8 bno055_driver_i2c_read(u8 dev_addr, u8 reg_addr, u8 *reg_data, u8 cnt) {
-    u8 read_buffer[i2c_buffer_length];
-
-    read_buffer[0] = reg_addr;
+    i2c->address(dev_addr);
+    i2c->writeByte(reg_addr);
 
     i2c->address(dev_addr);
-    int bytes_read = i2c->read(read_buffer, (int) cnt);
-
-    for(int i = 0; i < i2c_buffer_length; i++) {
-        *(reg_data + i) = read_buffer[i];
-    }
+    int bytes_read = i2c->read(reg_data, cnt);
 
     if(bytes_read > 0) {
-        return (s8) SUCCESS;
+        return SUCCESS;
     } else {
-        return (s8) ERROR;
+        return ERROR;
     }
-    /*
-    u8 array[i2c_buffer_length];
-
-    u8 stringpos = BNO055_ZERO_U8X;
-    array[BNO055_ZERO_U8X] = reg_addr;
-
-    i2c->address(dev_addr);
-    int i2c_bytes_read = i2c->read(array, (int) cnt);
-
-    for (stringpos = BNO055_ZERO_U8X; stringpos < cnt; stringpos++) {
-        *(reg_data + stringpos) = array[stringpos];
-    }
-
-    if(i2c_bytes_read > 0) {
-        std::cout << "READ SUCCESS" << std::endl;
-        return (s8) SUCCESS;
-    } else {
-        std::cout << "READ FAIL Bytes Read" << std::endl;
-        return (s8) ERROR;
-    }
-     */
 }
 
 void bno055_driver_delay(u32 msek) {

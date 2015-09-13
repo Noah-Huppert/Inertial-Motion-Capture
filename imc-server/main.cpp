@@ -8,6 +8,10 @@
 
 std::mutex imu_lock;
 IMU *imu;
+long imu_update_interval = 1000;
+
+std::mutex running_lock;
+bool running = true;
 
 class IMUSocketServer: public SocketServer {
 public:
@@ -51,6 +55,10 @@ public:
             }
             SocketServer::socket_send(client_socket_fd, send_buffer, buffer_size);
         }
+
+        running_lock.lock();
+        running = false;
+        running_lock.unlock();
     }
 };
 
@@ -61,7 +69,28 @@ void socket_server_accept() {
 }
 
 void imu_update() {
+    long now = std::chrono::system_clock::now().time_since_epoch().count();
+    long last_update = now;
 
+    while(true) {
+        now = std::chrono::system_clock::now().time_since_epoch().count();
+
+        if(now - last_update >= imu_update_interval) {
+            running_lock.lock();
+            if (!running) {
+                break;
+            }
+            running_lock.unlock();
+
+            std::cout << TAG_DEBUG << "Updating" << now - last_update <<  std::endl;
+
+            imu_lock.lock();
+            imu->update();
+            imu_lock.unlock();
+
+            last_update = now;
+        }
+    }
 }
 
 int main() {
