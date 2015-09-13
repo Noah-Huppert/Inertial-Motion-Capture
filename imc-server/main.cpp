@@ -48,8 +48,6 @@ public:
 
                 std::string temp_out = out_stream.str();
                 strncpy(send_buffer, temp_out.c_str(), buffer_size);
-
-                std::cout << TAG_DEBUG << "send_buffer = " << send_buffer << std::endl;
             }
             SocketServer::socket_send(client_socket_fd, send_buffer, buffer_size);
         }
