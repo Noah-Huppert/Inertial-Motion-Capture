@@ -148,8 +148,11 @@ int SocketServer::socket_receive(int socket_fd, char *receive_buffer, int receiv
                                                                  ")" << std::endl;
         return IMC_FAIL;
     } else {
-        std::cout << TAG_DEBUG << "Received from socket(fd => " << socket_fd << std::endl << TAG_NONE <<
-                                  "                     receive_buffer => " << receive_buffer << ")" << std::endl;
+        if(cout_socket_receive) {
+            std::cout << TAG_DEBUG << "Received from socket(fd => " << socket_fd << std::endl << TAG_NONE <<
+            "                     receive_buffer => " << receive_buffer << ")" << std::endl;
+        }
+
         return IMC_SUCCESS;
     }
 }
@@ -163,8 +166,11 @@ int SocketServer::socket_send(int socket_fd, char *send_buffer, int send_buffer_
                                                               ")" << std::endl;
         return IMC_FAIL;
     } else {
-        std::cout << TAG_DEBUG << "Sent from socket(fd => " << socket_fd << std::endl << TAG_NONE <<
-                                  "                 send_buffer => " << send_buffer << ")" << std::endl;
+        if(cout_socket_send) {
+            std::cout << TAG_DEBUG << "Sent from socket(fd => " << socket_fd << std::endl << TAG_NONE <<
+            "                 send_buffer => " << send_buffer << ")" << std::endl;
+        }
+
         return IMC_SUCCESS;
     }
 }

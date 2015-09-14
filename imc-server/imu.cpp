@@ -97,6 +97,10 @@ int IMU::update_rotation() {
 
     return IMC_SUCCESS;
 }
+long calc_delta_postition(long acceleration, long delta_time) {
+    long delta_velocity = acceleration * delta_time;
+    return delta_velocity * delta_time;
+}
 
 int IMU::update_position() {
     if(last_position_update_time == -1) {
@@ -121,9 +125,9 @@ int IMU::update_position() {
     long delta_time = imc_time() - last_position_update_time;
 
     position_lock.lock();
-    position.x = delta_time * linear_acceleration.x;
-    position.y = delta_time * linear_acceleration.y;
-    position.z = delta_time * linear_acceleration.z;
+    position.x += calc_delta_postition(linear_acceleration.x, delta_time);
+    position.y += calc_delta_postition(linear_acceleration.y, delta_time);
+    position.z += calc_delta_postition(linear_acceleration.z, delta_time);
     position_lock.unlock();
 
     return IMC_SUCCESS;

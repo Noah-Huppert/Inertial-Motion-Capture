@@ -12,6 +12,9 @@
 
 class SocketServer {
 public:
+    static const bool cout_socket_receive = false;
+    static const bool cout_socket_send = false;
+
     SocketServer(): server_socket_port(-1) {
         std::cerr << TAG_ERROR << "SocketServer default constructor used, port will not be set!" << std::endl;
     }

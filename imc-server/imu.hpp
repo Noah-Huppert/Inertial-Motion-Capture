@@ -4,6 +4,7 @@
 #include <iostream>
 #include <chrono>
 #include <mutex>
+#include <cmath>
 
 extern "C" {
 #include "bno055.h"
@@ -22,6 +23,8 @@ class IMU {
 public:
     std::mutex rotation_lock;
     Quaternion rotation;
+
+    Vector3 velocity;
 
     std::mutex position_lock;
     Vector3 position;
