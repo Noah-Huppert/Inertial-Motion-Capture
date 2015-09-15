@@ -46,6 +46,7 @@ private:
     bool bno055_initialized = false;
     bool bno055_power_mode_normal = false;
     bool bno055_operation_mode_ndof = false;
+    bool bno055_accelerometer_sensitivity = false;
 
     /* BNO055 */
     struct bno055_t bno055;

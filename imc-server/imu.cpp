@@ -49,6 +49,15 @@ int IMU::start() {
         bno055_operation_mode_ndof = true;
     }
 
+    if(!bno055_accelerometer_sensitivity) {
+        int bno055_set_accelerometer_sensitivity_result = bno055_set_accel_range(ACCEL_RANGE_16G);
+
+        if(bno055_set_accelerometer_sensitivity_result < 0) {
+            std::cerr << TAG_ERROR << "Failed to set bno055 accelerometer sensitivity" << std::endl;
+            return IMC_FAIL;
+        }
+    }
+
     return IMC_SUCCESS;
 }
 
