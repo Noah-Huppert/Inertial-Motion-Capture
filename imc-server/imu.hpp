@@ -4,6 +4,7 @@
 #include <iostream>
 #include <chrono>
 #include <mutex>
+#include <cmath>
 
 extern "C" {
 #include "bno055.h"
@@ -13,6 +14,7 @@ extern "C" {
 
 #include "status.h"
 #include "log.h"
+#include "imc_time.hpp"
 
 #include "quaternion.hpp"
 #include "vector3.hpp"
@@ -21,6 +23,8 @@ class IMU {
 public:
     std::mutex rotation_lock;
     Quaternion rotation;
+
+    Vector3 velocity;
 
     std::mutex position_lock;
     Vector3 position;
@@ -36,10 +40,13 @@ public:
     int update();
 
 private:
+    long last_position_update_time = -1;
+
     bool bno055_driver_bound = false;
     bool bno055_initialized = false;
     bool bno055_power_mode_normal = false;
     bool bno055_operation_mode_ndof = false;
+    bool bno055_accelerometer_sensitivity = false;
 
     /* BNO055 */
     struct bno055_t bno055;
