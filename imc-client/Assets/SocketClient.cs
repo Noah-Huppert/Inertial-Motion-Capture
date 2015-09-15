@@ -23,19 +23,22 @@ public class SocketClient {
 	}
 
 	public void connect() {
-		tcpClient = new TcpClient (host, port);
-		Debug.Log ("Connected to socket " + host + ":" + port);
+		if (tcpClient == null) {
+			tcpClient = new TcpClient (host, port);
+			Debug.Log ("Connected to socket " + host + ":" + port);
+		}
 	}
 
 	public void disconnect() {
 		if (tcpClient != null) {
 			tcpClient.Close();
 			Debug.Log ("Disconnected from socket " + host + ":" + port);
+			tcpClient = null;
 		}
 	}
 
 	public void write(string sendContent) {
-		if (tcpClient.Connected) {
+		if (tcpClient != null && tcpClient.Connected) {
 			int sendBufferSize = sendContent.Length;
 			byte[] sendBuffer = new byte[sendBufferSize];
 			sendBuffer = Encoding.UTF8.GetBytes(sendContent);
@@ -47,7 +50,7 @@ public class SocketClient {
 	}
 
 	public void read() {
-		if (tcpClient.Connected) {
+		if (tcpClient != null && tcpClient.Connected) {
 			tcpClient.GetStream().BeginRead(readBuffer, 0, READ_BUFFER_SIZE, new AsyncCallback(readCallback), null);
 		} else {
 			Debug.Log("SocketClient must be connected");
