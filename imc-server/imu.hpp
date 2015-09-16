@@ -5,6 +5,7 @@
 #include <chrono>
 #include <mutex>
 #include <cmath>
+#include <deque>
 
 extern "C" {
 #include "bno055.h"
@@ -19,12 +20,17 @@ extern "C" {
 #include "quaternion.hpp"
 #include "vector3.hpp"
 
+#include "moving_average_filter.hpp"
+
 class IMU {
 public:
     std::mutex rotation_lock;
     Quaternion rotation;
 
-    Vector3 velocity;
+    int maf_size = 5;
+    MovingAverageFilter accel_x_maf = MovingAverageFilter(maf_size);
+    MovingAverageFilter accel_y_maf = MovingAverageFilter(maf_size);
+    MovingAverageFilter accel_z_maf = MovingAverageFilter(maf_size);
 
     std::mutex position_lock;
     Vector3 position;

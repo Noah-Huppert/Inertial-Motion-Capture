@@ -16,6 +16,12 @@ struct Vector3 {
         stream << x << " " << y << " " << z;
         return stream.str();
     }
+
+    std::string to_csv_row() {
+        std::stringstream stream;
+        stream << x << "," << y << "," << z;
+        return stream.str();
+    }
 };
 
 #endif

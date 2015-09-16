@@ -1,4 +1,8 @@
 #include "imu.hpp"
+#include <fstream>
+
+std::ofstream csv_log;
+long log_start_time = 0;
 
 /* MRAA */
 mraa::I2c *i2c = new mraa::I2c(1);
@@ -58,6 +62,12 @@ int IMU::start() {
         }
     }
 
+    csv_log.open("csv_log.csv");
+
+    csv_log << "accel-x,accel-y,accel-z,accel-maf-x,accel-maf-y,accel-maf-z,pos-x,pos-y,pos-z,t" <<std::endl;
+
+    log_start_time = imc_time();
+
     return IMC_SUCCESS;
 }
 
@@ -72,6 +82,10 @@ int IMU::stop() {
 
         bno055_power_mode_normal = false;
     }
+
+    csv_log.close();
+
+    std::cout << "CLOSING" << std::endl;
 
     return IMC_SUCCESS;
 }
@@ -130,13 +144,27 @@ int IMU::update_position() {
         return IMC_FAIL;
     }
 
+    csv_log << linear_acceleration.x << "," << linear_acceleration.y << "," << linear_acceleration.z << ",";
+
+    accel_x_maf.add(linear_acceleration.x);
+    accel_y_maf.add(linear_acceleration.y);
+    accel_z_maf.add(linear_acceleration.z);
+
+    csv_log << accel_x_maf.average() << ","
+              << accel_y_maf.average() << ","
+              << accel_z_maf.average() << ",";
+
     // Integrate
     long delta_time = imc_time() - last_position_update_time;
 
     position_lock.lock();
+
     position.x += calc_delta_postition(linear_acceleration.x, delta_time);
     position.y += calc_delta_postition(linear_acceleration.y, delta_time);
     position.z += calc_delta_postition(linear_acceleration.z, delta_time);
+
+    csv_log << position.to_csv_row() << "," << (imc_time() - log_start_time) << std::endl;
+
     position_lock.unlock();
 
     return IMC_SUCCESS;
