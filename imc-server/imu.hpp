@@ -20,17 +20,21 @@ extern "C" {
 #include "quaternion.hpp"
 #include "vector3.hpp"
 
-#include "moving_average_filter.hpp"
+#include "difference_filter.hpp"
+#include "csv_log.hpp"
 
 class IMU {
 public:
     std::mutex rotation_lock;
     Quaternion rotation;
 
-    int maf_size = 5;
-    MovingAverageFilter accel_x_maf = MovingAverageFilter(maf_size);
-    MovingAverageFilter accel_y_maf = MovingAverageFilter(maf_size);
-    MovingAverageFilter accel_z_maf = MovingAverageFilter(maf_size);
+    CSVLog csv_log = CSVLog("csv_log.csv");
+
+    DifferenceFilter accel_df_x;
+    DifferenceFilter accel_df_y;
+    DifferenceFilter accel_df_z;
+
+    long log_start_time = 0;
 
     std::mutex position_lock;
     Vector3 position;

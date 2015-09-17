@@ -1,9 +1,6 @@
 #include "imu.hpp"
 #include <fstream>
 
-std::ofstream csv_log;
-long log_start_time = 0;
-
 /* MRAA */
 mraa::I2c *i2c = new mraa::I2c(1);
 const int i2c_buffer_length = 8;
@@ -62,9 +59,23 @@ int IMU::start() {
         }
     }
 
-    csv_log.open("csv_log.csv");
+    csv_log.add_column("accel-x");
+    csv_log.add_column("accel-y");
+    csv_log.add_column("accel-z");
 
-    csv_log << "accel-x,accel-y,accel-z,accel-maf-x,accel-maf-y,accel-maf-z,pos-x,pos-y,pos-z,t" <<std::endl;
+    csv_log.add_column("accel-df-x");
+    csv_log.add_column("accel-df-y");
+    csv_log.add_column("accel-df-z");
+
+    csv_log.add_column("pos-x");
+    csv_log.add_column("pos-y");
+    csv_log.add_column("pos-z");
+
+    csv_log.add_column("t");
+
+    csv_log.lock_columns();
+
+    csv_log.open();
 
     log_start_time = imc_time();
 
@@ -84,8 +95,6 @@ int IMU::stop() {
     }
 
     csv_log.close();
-
-    std::cout << "CLOSING" << std::endl;
 
     return IMC_SUCCESS;
 }
@@ -144,18 +153,18 @@ int IMU::update_position() {
         return IMC_FAIL;
     }
 
-    csv_log << linear_acceleration.x << "," << linear_acceleration.y << "," << linear_acceleration.z << ",";
-
-    accel_x_maf.add(linear_acceleration.x);
-    accel_y_maf.add(linear_acceleration.y);
-    accel_z_maf.add(linear_acceleration.z);
-
-    csv_log << accel_x_maf.average() << ","
-              << accel_y_maf.average() << ","
-              << accel_z_maf.average() << ",";
-
     // Integrate
     long delta_time = imc_time() - last_position_update_time;
+
+    csv_log.add_to_line("accel-x", linear_acceleration.x);
+    csv_log.add_to_line("accel-y", linear_acceleration.y);
+    csv_log.add_to_line("accel-z", linear_acceleration.z);
+
+    csv_log.add_to_line("accel-df-x", accel_df_x.value(linear_acceleration.x));
+    csv_log.add_to_line("accel-df-y", accel_df_y.value(linear_acceleration.y));
+    csv_log.add_to_line("accel-df-z", accel_df_z.value(linear_acceleration.z));
+
+    csv_log.add_to_line("t", imc_time() - log_start_time);
 
     position_lock.lock();
 
@@ -163,9 +172,13 @@ int IMU::update_position() {
     position.y += calc_delta_postition(linear_acceleration.y, delta_time);
     position.z += calc_delta_postition(linear_acceleration.z, delta_time);
 
-    csv_log << position.to_csv_row() << "," << (imc_time() - log_start_time) << std::endl;
+    csv_log.add_to_line("pos-x", position.x);
+    csv_log.add_to_line("pos-y", position.y);
+    csv_log.add_to_line("pos-z", position.z);
 
     position_lock.unlock();
+
+    csv_log.finish_line();
 
     return IMC_SUCCESS;
 }
