@@ -1,4 +1,5 @@
 #include "imu.hpp"
+#include <fstream>
 
 /* MRAA */
 mraa::I2c *i2c = new mraa::I2c(1);
@@ -58,6 +59,26 @@ int IMU::start() {
         }
     }
 
+    csv_log.add_column("accel-x");
+    csv_log.add_column("accel-y");
+    csv_log.add_column("accel-z");
+
+    csv_log.add_column("accel-df-x");
+    csv_log.add_column("accel-df-y");
+    csv_log.add_column("accel-df-z");
+
+    csv_log.add_column("pos-x");
+    csv_log.add_column("pos-y");
+    csv_log.add_column("pos-z");
+
+    csv_log.add_column("t");
+
+    csv_log.lock_columns();
+
+    csv_log.open();
+
+    log_start_time = imc_time();
+
     return IMC_SUCCESS;
 }
 
@@ -72,6 +93,8 @@ int IMU::stop() {
 
         bno055_power_mode_normal = false;
     }
+
+    csv_log.close();
 
     return IMC_SUCCESS;
 }
@@ -133,11 +156,29 @@ int IMU::update_position() {
     // Integrate
     long delta_time = imc_time() - last_position_update_time;
 
+    csv_log.add_to_line("accel-x", linear_acceleration.x);
+    csv_log.add_to_line("accel-y", linear_acceleration.y);
+    csv_log.add_to_line("accel-z", linear_acceleration.z);
+
+    csv_log.add_to_line("accel-df-x", accel_df_x.value(linear_acceleration.x));
+    csv_log.add_to_line("accel-df-y", accel_df_y.value(linear_acceleration.y));
+    csv_log.add_to_line("accel-df-z", accel_df_z.value(linear_acceleration.z));
+
+    csv_log.add_to_line("t", imc_time() - log_start_time);
+
     position_lock.lock();
+
     position.x += calc_delta_postition(linear_acceleration.x, delta_time);
     position.y += calc_delta_postition(linear_acceleration.y, delta_time);
     position.z += calc_delta_postition(linear_acceleration.z, delta_time);
+
+    csv_log.add_to_line("pos-x", position.x);
+    csv_log.add_to_line("pos-y", position.y);
+    csv_log.add_to_line("pos-z", position.z);
+
     position_lock.unlock();
+
+    csv_log.finish_line();
 
     return IMC_SUCCESS;
 }

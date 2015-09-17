@@ -19,6 +19,12 @@ set(SOURCE_FILES ${SOURCE_FILES}
         status.h
         log.h
 
+        csv_log.hpp
+        csv_log.cpp
+
+        difference_filter.hpp
+        difference_filter.cpp
+
         imc_time.hpp
         imc_time.cpp
 

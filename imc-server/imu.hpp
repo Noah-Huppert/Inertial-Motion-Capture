@@ -5,6 +5,7 @@
 #include <chrono>
 #include <mutex>
 #include <cmath>
+#include <deque>
 
 extern "C" {
 #include "bno055.h"
@@ -19,12 +20,21 @@ extern "C" {
 #include "quaternion.hpp"
 #include "vector3.hpp"
 
+#include "difference_filter.hpp"
+#include "csv_log.hpp"
+
 class IMU {
 public:
     std::mutex rotation_lock;
     Quaternion rotation;
 
-    Vector3 velocity;
+    CSVLog csv_log = CSVLog("csv_log.csv");
+
+    DifferenceFilter accel_df_x;
+    DifferenceFilter accel_df_y;
+    DifferenceFilter accel_df_z;
+
+    long log_start_time = 0;
 
     std::mutex position_lock;
     Vector3 position;
