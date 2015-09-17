@@ -1,8 +1,11 @@
 #ifndef DIFFERENCE_FILTER_H
 #define DIFFERENCE_FILTER_H
 
-#include <stdlib.h>
+#include <iostream>
+#include <math.h>
 #include <deque>
+
+#include "log.h"
 
 class DifferenceFilter {
 public:
