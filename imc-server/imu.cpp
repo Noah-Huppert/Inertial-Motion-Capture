@@ -67,6 +67,10 @@ int IMU::start() {
     csv_log.add_column("accel-df-y");
     csv_log.add_column("accel-df-z");
 
+    csv_log.add_column("vel-x");
+    csv_log.add_column("vel-y");
+    csv_log.add_column("vel-z");
+
     csv_log.add_column("pos-x");
     csv_log.add_column("pos-y");
     csv_log.add_column("pos-z");
@@ -164,13 +168,17 @@ int IMU::update_position() {
     csv_log.add_to_line("accel-df-y", accel_df_y.value(linear_acceleration.y));
     csv_log.add_to_line("accel-df-z", accel_df_z.value(linear_acceleration.z));
 
+    csv_log.add_to_line("vel-x", linear_acceleration.x * delta_time);
+    csv_log.add_to_line("vel-y", linear_acceleration.y * delta_time);
+    csv_log.add_to_line("vel-z", linear_acceleration.z * delta_time);
+
     csv_log.add_to_line("t", imc_time() - log_start_time);
 
     position_lock.lock();
 
-    position.x += calc_delta_postition(linear_acceleration.x, delta_time);
-    position.y += calc_delta_postition(linear_acceleration.y, delta_time);
-    position.z += calc_delta_postition(linear_acceleration.z, delta_time);
+    position.x += calc_delta_postition(accel_df_x.value(linear_acceleration.x), delta_time);
+    position.y += calc_delta_postition(accel_df_y.value(linear_acceleration.y), delta_time);
+    position.z += calc_delta_postition(accel_df_z.value(linear_acceleration.z), delta_time);
 
     csv_log.add_to_line("pos-x", position.x);
     csv_log.add_to_line("pos-y", position.y);

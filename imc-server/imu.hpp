@@ -30,9 +30,10 @@ public:
 
     CSVLog csv_log = CSVLog("csv_log.csv");
 
-    DifferenceFilter accel_df_x;
-    DifferenceFilter accel_df_y;
-    DifferenceFilter accel_df_z;
+    int df_size = 10;
+    DifferenceFilter accel_df_x = DifferenceFilter(df_size);
+    DifferenceFilter accel_df_y = DifferenceFilter(df_size);
+    DifferenceFilter accel_df_z = DifferenceFilter(df_size);
 
     long log_start_time = 0;
 

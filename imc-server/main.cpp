@@ -9,7 +9,7 @@
 
 std::mutex imu_lock;
 IMU *imu;
-long imu_update_interval = 10;
+long imu_update_interval = 5;
 
 std::mutex server_running_lock;
 bool server_running = true;
