@@ -22,6 +22,9 @@ set(SOURCE_FILES ${SOURCE_FILES}
         csv_log.hpp
         csv_log.cpp
 
+        moving_average_filter.hpp
+        moving_average_filter.cpp
+
         difference_filter.hpp
         difference_filter.cpp
 

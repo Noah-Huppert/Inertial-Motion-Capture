@@ -1,6 +1,9 @@
 #include "imu.hpp"
 #include <fstream>
 
+CSVLog csv_log("integration_log.csv");
+long csv_log_start_time = 0;
+
 /* MRAA */
 mraa::I2c *i2c = new mraa::I2c(1);
 const int i2c_buffer_length = 8;
@@ -59,6 +62,32 @@ int IMU::start() {
         }
     }
 
+    csv_log.add_columns({
+            "accel-center-x",
+            "accel-center-y",
+            "accel-center-z",
+
+            "accel-x",
+            "accel-y",
+            "accel-z",
+
+            "accel-df-x",
+            "accel-df-y",
+            "accel-df-z",
+
+            "pos-x",
+            "pos-y",
+            "pos-z",
+
+            "t"
+    });
+
+    csv_log.lock_columns();
+
+    csv_log.open();
+
+    csv_log_start_time = imc_time();
+
     return IMC_SUCCESS;
 }
 
@@ -73,6 +102,8 @@ int IMU::stop() {
 
         bno055_power_mode_normal = false;
     }
+
+    csv_log.close();
 
     return IMC_SUCCESS;
 }
@@ -107,10 +138,6 @@ int IMU::update_rotation() {
 
     return IMC_SUCCESS;
 }
-long calc_delta_postition(long acceleration, long delta_time) {
-    long delta_velocity = acceleration * delta_time;
-    return delta_velocity * delta_time;
-}
 
 int IMU::update_position() {
     if(last_position_update_time == -1) {
@@ -126,9 +153,21 @@ int IMU::update_position() {
 
     int get_linear_acceleration_result = bno055_convert_double_linear_accel_xyz_msq(&linear_acceleration);
 
+    csv_log.add_to_line("accel-x", linear_acceleration.x);
+    csv_log.add_to_line("accel-y", linear_acceleration.y);
+    csv_log.add_to_line("accel-z", linear_acceleration.z);
+
     double accel_filtered_x = accel_df_x.value(linear_acceleration.x);
     double accel_filtered_y = accel_df_y.value(linear_acceleration.y);
     double accel_filtered_z = accel_df_z.value(linear_acceleration.z);
+
+    csv_log.add_to_line("accel-center-x", accel_df_x.center_value_maf.average());
+    csv_log.add_to_line("accel-center-y", accel_df_y.center_value_maf.average());
+    csv_log.add_to_line("accel-center-z", accel_df_z.center_value_maf.average());
+
+    csv_log.add_to_line("accel-df-x", accel_filtered_x);
+    csv_log.add_to_line("accel-df-y", accel_filtered_y);
+    csv_log.add_to_line("accel-df-z", accel_filtered_z);
 
     double side_x = (accel_filtered_x + last_accel.x) / 2;
     double side_y = (accel_filtered_y + last_accel.y) / 2;
@@ -148,11 +187,21 @@ int IMU::update_position() {
 
     position_lock.lock();
 
-    position.x += side_x * delta_time;//calc_delta_postition(accel_df_x.value(linear_acceleration.x), delta_time);
-    position.y += side_y * delta_time;//calc_delta_postition(accel_df_y.value(linear_acceleration.y), delta_time);
-    position.z += side_z * delta_time;//calc_delta_postition(accel_df_z.value(linear_acceleration.z), delta_time);
+    position.x += side_x * delta_time;
+    position.y += side_y * delta_time;
+    position.z += side_z * delta_time;
+
+    csv_log.add_to_line("pos-x", position.x);
+    csv_log.add_to_line("pos-y", position.y);
+    csv_log.add_to_line("pos-z", position.z);
 
     position_lock.unlock();
+
+    last_position_update_time = imc_time();
+
+    csv_log.add_to_line("t", imc_time() - csv_log_start_time);
+
+    csv_log.finish_line();
 
     return IMC_SUCCESS;
 }

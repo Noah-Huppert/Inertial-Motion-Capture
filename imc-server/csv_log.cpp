@@ -37,16 +37,18 @@ int CSVLog::close() {
     return IMC_SUCCESS;
 }
 
-int CSVLog::add_column(std::string key) {
-    for(int i = 0; i < columns.size(); i++) {
-        if(columns[i] == key) {
-            std::cout << TAG_ERROR << "Can not add column that exists \"" << key << "\"" << std::endl;
-            return IMC_FAIL;
+int CSVLog::add_columns(std::initializer_list<std::string> keys) {
+    for(std::string key : keys) {
+        for (int i = 0; i < columns.size(); i++) {
+            if (columns[i] == key) {
+                std::cout << TAG_ERROR << "Can not add column that exists \"" << key << "\"" << std::endl;
+                return IMC_FAIL;
+            }
         }
-    }
 
-    if(!columns_locked) {
-        columns.push_back(key);
+        if (!columns_locked) {
+            columns.push_back(key);
+        }
     }
 }
 

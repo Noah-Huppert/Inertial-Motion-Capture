@@ -32,12 +32,15 @@ public:
     DifferenceFilter accel_df_x = DifferenceFilter(df_size);
     DifferenceFilter accel_df_y = DifferenceFilter(df_size);
     DifferenceFilter accel_df_z = DifferenceFilter(df_size);
+
     Vector3 last_accel;
 
     std::mutex position_lock;
     Vector3 position;
 
-    IMU() {};
+    IMU() {
+        accel_df_z.difference_threshold = 0.25;
+    };
     ~IMU() {};
 
     int start();
