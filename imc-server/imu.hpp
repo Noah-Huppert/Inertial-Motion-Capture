@@ -34,6 +34,7 @@ public:
     DifferenceFilter accel_df_z = DifferenceFilter(df_size);
 
     Vector3 last_accel;
+    Vector3 last_vel;
 
     std::mutex position_lock;
     Vector3 position;

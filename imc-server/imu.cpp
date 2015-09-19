@@ -63,10 +63,6 @@ int IMU::start() {
     }
 
     csv_log.add_columns({
-            "accel-center-x",
-            "accel-center-y",
-            "accel-center-z",
-
             "accel-x",
             "accel-y",
             "accel-z",
@@ -74,6 +70,14 @@ int IMU::start() {
             "accel-df-x",
             "accel-df-y",
             "accel-df-z",
+
+            "accel-center-x",
+            "accel-center-y",
+            "accel-center-z",
+
+            "vel-x",
+            "vel-y",
+            "vel-z",
 
             "pos-x",
             "pos-y",
@@ -139,6 +143,11 @@ int IMU::update_rotation() {
     return IMC_SUCCESS;
 }
 
+double trapazoid_area(double side1, double side2, double width) {
+    double side_avrg = (side1 + side2) / 2;
+    return side_avrg * width;
+}
+
 int IMU::update_position() {
     if(last_position_update_time == -1) {
         last_position_update_time = imc_time();
@@ -153,25 +162,15 @@ int IMU::update_position() {
 
     int get_linear_acceleration_result = bno055_convert_double_linear_accel_xyz_msq(&linear_acceleration);
 
-    csv_log.add_to_line("accel-x", linear_acceleration.x);
-    csv_log.add_to_line("accel-y", linear_acceleration.y);
-    csv_log.add_to_line("accel-z", linear_acceleration.z);
-
     double accel_filtered_x = accel_df_x.value(linear_acceleration.x);
     double accel_filtered_y = accel_df_y.value(linear_acceleration.y);
     double accel_filtered_z = accel_df_z.value(linear_acceleration.z);
 
-    csv_log.add_to_line("accel-center-x", accel_df_x.center_value_maf.average());
-    csv_log.add_to_line("accel-center-y", accel_df_y.center_value_maf.average());
-    csv_log.add_to_line("accel-center-z", accel_df_z.center_value_maf.average());
-
-    csv_log.add_to_line("accel-df-x", accel_filtered_x);
-    csv_log.add_to_line("accel-df-y", accel_filtered_y);
-    csv_log.add_to_line("accel-df-z", accel_filtered_z);
-
+    /*
     double side_x = (accel_filtered_x + last_accel.x) / 2;
     double side_y = (accel_filtered_y + last_accel.y) / 2;
     double side_z = (accel_filtered_z + last_accel.z) / 2;
+    */
 
     last_accel.x = accel_filtered_x;
     last_accel.y = accel_filtered_y;
@@ -185,11 +184,23 @@ int IMU::update_position() {
     // Integrate
     long delta_time = imc_time() - last_position_update_time;
 
+    double vel_x = trapazoid_area(accel_filtered_x, last_accel.x, delta_time);
+    double vel_y = trapazoid_area(accel_filtered_y, last_accel.y, delta_time);
+    double vel_z = trapazoid_area(accel_filtered_z, last_accel.z, delta_time);
+
+    double displacement_x = trapazoid_area(vel_x, last_vel.x, delta_time);
+    double displacement_y = trapazoid_area(vel_y, last_vel.y, delta_time);
+    double displacement_z = trapazoid_area(vel_z, last_vel.z, delta_time);
+
+    last_vel.x = vel_x;
+    last_vel.y = vel_y;
+    last_vel.z = vel_z;
+
     position_lock.lock();
 
-    position.x += side_x * delta_time;
-    position.y += side_y * delta_time;
-    position.z += side_z * delta_time;
+    position.x += displacement_x;
+    position.y += displacement_y;
+    position.z += displacement_z;
 
     csv_log.add_to_line("pos-x", position.x);
     csv_log.add_to_line("pos-y", position.y);
@@ -198,6 +209,22 @@ int IMU::update_position() {
     position_lock.unlock();
 
     last_position_update_time = imc_time();
+
+    csv_log.add_to_line("accel-x", linear_acceleration.x);
+    csv_log.add_to_line("accel-y", linear_acceleration.y);
+    csv_log.add_to_line("accel-z", linear_acceleration.z);
+
+    csv_log.add_to_line("accel-center-x", accel_df_x.center_value_maf.average());
+    csv_log.add_to_line("accel-center-y", accel_df_y.center_value_maf.average());
+    csv_log.add_to_line("accel-center-z", accel_df_z.center_value_maf.average());
+
+    csv_log.add_to_line("accel-df-x", accel_filtered_x);
+    csv_log.add_to_line("accel-df-y", accel_filtered_y);
+    csv_log.add_to_line("accel-df-z", accel_filtered_z);
+
+    csv_log.add_to_line("vel-x", vel_x);
+    csv_log.add_to_line("vel-y", vel_y);
+    csv_log.add_to_line("vel-z", vel_z);
 
     csv_log.add_to_line("t", imc_time() - csv_log_start_time);
 

@@ -13,6 +13,8 @@
 
 class CSVLog {
 public:
+    bool ACTIVE = true;
+
     CSVLog(std::string file_path): file_path(file_path) {}
     CSVLog(const CSVLog& csv_log) {
         file_open = csv_log.file_open;
