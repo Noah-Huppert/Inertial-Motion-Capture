@@ -6,11 +6,14 @@
 #include <deque>
 
 #include "log.h"
+#include "moving_average_filter.hpp"
 
 class DifferenceFilter {
 public:
     double zero_value = 0;
     double difference_threshold = 0.1;
+
+    MovingAverageFilter center_value_maf = MovingAverageFilter(50);
 
     DifferenceFilter(int list_size): list_size(list_size) {}
 

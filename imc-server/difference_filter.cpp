@@ -1,6 +1,14 @@
 #include "difference_filter.hpp"
 
 double DifferenceFilter::value(double value) {
+    center_value_maf.add(value);
+
+    if(fabs(center_value_maf.average() - value) >= difference_threshold) {
+        return value;
+    }
+
+    return zero_value;
+    /*
     // Get value
     double return_value = zero_value;
 
@@ -19,4 +27,5 @@ double DifferenceFilter::value(double value) {
     }
 
     return return_value;
+     */
 }

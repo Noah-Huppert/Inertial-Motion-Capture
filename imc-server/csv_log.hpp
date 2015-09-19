@@ -6,6 +6,7 @@
 #include <vector>
 #include <map>
 #include <sstream>
+#include <initializer_list>
 
 #include "log.h"
 #include "status.h"
@@ -27,7 +28,7 @@ public:
     int open();
     int close();
 
-    int add_column(std::string key);
+    int add_columns(std::initializer_list<std::string> keys);
     int lock_columns();
 
     int add_to_line(std::string key, std::string value);
