@@ -14,13 +14,10 @@ public class SocketEchoController : MonoBehaviour {
 	private float updateTimeInterval = 0.0001F;
 
 	private const int position_maf_size = 1;
-	private const long position_dampening_constant = 100000000;//10000;//100000000;//5000000000;
+    private const long position_dampening_constant = 7500;//100000000;//10000;//100000000;//5000000000;
 
-	private MovingAverageFilter position_x_maf = new MovingAverageFilter (position_maf_size);
-	private MovingAverageFilter position_y_maf = new MovingAverageFilter (position_maf_size);
-	private MovingAverageFilter position_z_maf = new MovingAverageFilter (position_maf_size);
-
-	private Quaternion rotation;
+    private Vector3 position;
+    private Quaternion rotation;
 
 	/* Unity Lifecyle */
 	void Start() {
@@ -36,13 +33,11 @@ public class SocketEchoController : MonoBehaviour {
 			socketClient.write ("NEXT");
 			socketClient.read ();
 
-			Vector3 position = new Vector3(
-				position_x_maf.average() / position_dampening_constant,
-				position_y_maf.average() / position_dampening_constant,
-				position_z_maf.average() / position_dampening_constant
-			);
+            position.x /= position_dampening_constant;
+            position.y /= position_dampening_constant;
+            position.z /= position_dampening_constant;
 
-			transform.localPosition = position;
+            transform.localPosition = position;
 			transform.localRotation = rotation;
 
 			Debug.Log ("position => " + position + " rotation => " + rotation);
@@ -83,9 +78,9 @@ public class SocketEchoController : MonoBehaviour {
 		if (parts.Length != 7) {
 			Debug.LogError ("Malformed server response \"" + readResult + "\"");
 		} else {
-			position_x_maf.add(parts[2]);
-			position_y_maf.add(parts[0]);
-			position_z_maf.add(parts[1]);
+			position.x = parts[2] * -1;
+			position.y = parts[0] * -1;
+			position.z = parts[1] * -1;
 
 			rotation.w = parts[3];
 			rotation.x = parts[4];
