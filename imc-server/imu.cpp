@@ -59,30 +59,6 @@ int IMU::start() {
         }
     }
 
-    csv_log.add_column("accel-x");
-    csv_log.add_column("accel-y");
-    csv_log.add_column("accel-z");
-
-    csv_log.add_column("accel-df-x");
-    csv_log.add_column("accel-df-y");
-    csv_log.add_column("accel-df-z");
-
-    csv_log.add_column("vel-x");
-    csv_log.add_column("vel-y");
-    csv_log.add_column("vel-z");
-
-    csv_log.add_column("pos-x");
-    csv_log.add_column("pos-y");
-    csv_log.add_column("pos-z");
-
-    csv_log.add_column("t");
-
-    csv_log.lock_columns();
-
-    csv_log.open();
-
-    log_start_time = imc_time();
-
     return IMC_SUCCESS;
 }
 
@@ -97,8 +73,6 @@ int IMU::stop() {
 
         bno055_power_mode_normal = false;
     }
-
-    csv_log.close();
 
     return IMC_SUCCESS;
 }
@@ -152,6 +126,18 @@ int IMU::update_position() {
 
     int get_linear_acceleration_result = bno055_convert_double_linear_accel_xyz_msq(&linear_acceleration);
 
+    double accel_filtered_x = accel_df_x.value(linear_acceleration.x);
+    double accel_filtered_y = accel_df_y.value(linear_acceleration.y);
+    double accel_filtered_z = accel_df_z.value(linear_acceleration.z);
+
+    double side_x = (accel_filtered_x + last_accel.x) / 2;
+    double side_y = (accel_filtered_y + last_accel.y) / 2;
+    double side_z = (accel_filtered_z + last_accel.z) / 2;
+
+    last_accel.x = accel_filtered_x;
+    last_accel.y = accel_filtered_y;
+    last_accel.z = accel_filtered_z;
+
     if(get_linear_acceleration_result < 0) {
         std::cout << TAG_ERROR << "Failed to get converted linear accleration" << std::endl;
         return IMC_FAIL;
@@ -160,33 +146,13 @@ int IMU::update_position() {
     // Integrate
     long delta_time = imc_time() - last_position_update_time;
 
-    csv_log.add_to_line("accel-x", linear_acceleration.x);
-    csv_log.add_to_line("accel-y", linear_acceleration.y);
-    csv_log.add_to_line("accel-z", linear_acceleration.z);
-
-    csv_log.add_to_line("accel-df-x", accel_df_x.value(linear_acceleration.x));
-    csv_log.add_to_line("accel-df-y", accel_df_y.value(linear_acceleration.y));
-    csv_log.add_to_line("accel-df-z", accel_df_z.value(linear_acceleration.z));
-
-    csv_log.add_to_line("vel-x", linear_acceleration.x * delta_time);
-    csv_log.add_to_line("vel-y", linear_acceleration.y * delta_time);
-    csv_log.add_to_line("vel-z", linear_acceleration.z * delta_time);
-
-    csv_log.add_to_line("t", imc_time() - log_start_time);
-
     position_lock.lock();
 
-    position.x += calc_delta_postition(accel_df_x.value(linear_acceleration.x), delta_time);
-    position.y += calc_delta_postition(accel_df_y.value(linear_acceleration.y), delta_time);
-    position.z += calc_delta_postition(accel_df_z.value(linear_acceleration.z), delta_time);
-
-    csv_log.add_to_line("pos-x", position.x);
-    csv_log.add_to_line("pos-y", position.y);
-    csv_log.add_to_line("pos-z", position.z);
+    position.x += side_x * delta_time;//calc_delta_postition(accel_df_x.value(linear_acceleration.x), delta_time);
+    position.y += side_y * delta_time;//calc_delta_postition(accel_df_y.value(linear_acceleration.y), delta_time);
+    position.z += side_z * delta_time;//calc_delta_postition(accel_df_z.value(linear_acceleration.z), delta_time);
 
     position_lock.unlock();
-
-    csv_log.finish_line();
 
     return IMC_SUCCESS;
 }

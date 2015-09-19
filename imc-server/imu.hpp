@@ -28,14 +28,11 @@ public:
     std::mutex rotation_lock;
     Quaternion rotation;
 
-    CSVLog csv_log = CSVLog("csv_log.csv");
-
     int df_size = 10;
     DifferenceFilter accel_df_x = DifferenceFilter(df_size);
     DifferenceFilter accel_df_y = DifferenceFilter(df_size);
     DifferenceFilter accel_df_z = DifferenceFilter(df_size);
-
-    long log_start_time = 0;
+    Vector3 last_accel;
 
     std::mutex position_lock;
     Vector3 position;
