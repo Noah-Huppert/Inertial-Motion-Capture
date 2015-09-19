@@ -14,7 +14,7 @@ public class SocketEchoController : MonoBehaviour {
 	private float updateTimeInterval = 0.0001F;
 
 	private const int position_maf_size = 1;
-	private const long position_dampening_constant = 100000000;//5000000000;
+	private const long position_dampening_constant = 100000000;//10000;//100000000;//5000000000;
 
 	private MovingAverageFilter position_x_maf = new MovingAverageFilter (position_maf_size);
 	private MovingAverageFilter position_y_maf = new MovingAverageFilter (position_maf_size);
