@@ -85,9 +85,9 @@ public class SocketTransformController : MonoBehaviour {
         if(parts.Length != 7) {
             Debug.LogError("Malformed server response \"" + readResult + "\"");
         } else {
-            position.x = parts[2];
-            position.y = parts[0];
-            position.z = parts[1];
+            //position.x = parts[2];
+            //position.y = parts[0];
+            //position.z = parts[1];
 
             rotation.w = parts[3];
             rotation.x = parts[4];
