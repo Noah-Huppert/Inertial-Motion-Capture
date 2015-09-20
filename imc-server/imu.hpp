@@ -35,11 +35,13 @@ public:
 
     Vector3 last_accel;
     Vector3 last_vel;
+    Vector3 vel_sum;
 
     std::mutex position_lock;
     Vector3 position;
 
     IMU() {
+        //accel_df_y.difference_threshold = 0.3;
         accel_df_z.difference_threshold = 0.25;
     };
     ~IMU() {};

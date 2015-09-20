@@ -41,6 +41,9 @@ public:
 
                 imu->position_lock.lock();
                 imu->position = Vector3();
+                imu->vel_sum = Vector3();
+                imu->last_vel = Vector3();
+                imu->last_accel = Vector3();
                 imu->position_lock.unlock();
 
                 imu->rotation_lock.lock();
