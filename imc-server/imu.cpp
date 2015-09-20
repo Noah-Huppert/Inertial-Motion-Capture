@@ -235,6 +235,23 @@ int IMU::update_position() {
 
     csv_log.finish_line();
 
+    u8 accel_cal;
+    u8 gyro_cal;
+    u8 mag_cal;
+    u8 sys_cal;
+
+    bno055_get_accel_calib_stat(&accel_cal);
+    bno055_get_gyro_calib_stat(&gyro_cal);
+    bno055_get_mag_calib_stat(&mag_cal);
+    bno055_get_sys_calib_stat(&sys_cal);
+
+    /*
+    std::cout << TAG_DEBUG << "accel = " << (int) accel_cal << std::endl <<
+                              "     gyro = " << (int) gyro_cal <<  std::endl <<
+                              "     mag = " << (int) mag_cal <<  std::endl <<
+                              "     sys = " << (int) sys_cal << std::endl;
+    */
+
     return IMC_SUCCESS;
 }
 
