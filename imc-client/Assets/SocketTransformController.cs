@@ -2,97 +2,156 @@
 using System;
 
 public class SocketTransformController : MonoBehaviour {
-    private const bool LOG_POSITION = true;
+    // Config
+    private const bool LOG_ROTATION = false;
     private const bool SOCKET_ACTIVE = true;
 
-    private SocketClient socketClient;
+    // Socket
+    private SocketClient socket_client;
 
-    private float lastUpdateTime = 0;
-    private float updateTimeInterval = 0.0001F;
+    private float last_update_time = 0;
+    private float update_time_interval = 0.0001F;
 
-    private const long position_dampening_constant = 150;
+    // Catapult parts
+    public GameObject catapult_base;
+    public GameObject catapult_arm;
 
-    private Vector3 position;
-    private Quaternion rotation;
+    // Transform
+    Vector3 calibration_rotation = new Vector3(0, 0, 0);
+    Vector3 offset_rotation;
+    Vector3 server_rotation;
+
+    // Game stages
+    enum GameStage {
+        AIM,
+        POWER,
+        FIRE
+    }
+
+    float stage_aim_value = 0;
+    GameStage stage = GameStage.AIM;
+
+    // Misc
+    private bool initial_offsets_calculated = false;
 
     /* Unity Lifecyle */
     void Start() {
-        socketClient = new SocketClient("192.168.1.9", 1234, socketReadCallback);
+        socket_client = new SocketClient("192.168.1.9", 1234, socket_read_callback);
 
         if(SOCKET_ACTIVE) {
-            socketClient.connect();
+            socket_client.connect();
         }
     }
 
     void Update() {
-        if(Math.Abs(Time.time - lastUpdateTime) >= updateTimeInterval) {
-            lastUpdateTime = Time.time;
+        // Update rotation
+        if(Math.Abs(Time.time - last_update_time) >= update_time_interval) {
+            last_update_time = Time.time;
 
             if(SOCKET_ACTIVE) {
-                socketClient.write("NEXT");
-                socketClient.read();
+                socket_client.write("NEXT");
+                socket_client.read();
             }
+            
+            /*
+            if(stage == GameStage.AIM) {
+                server_rotation.y = stage_aim_value;
+            }
+            */
 
-            position.x /= position_dampening_constant;
-            position.y /= position_dampening_constant;
-            position.z /= position_dampening_constant;
+            Vector3 calculated_rotation = normalize_angle(server_rotation - offset_rotation - calibration_rotation);
 
-            transform.localPosition = position;
-            transform.localRotation = rotation;
+            catapult_base.transform.localRotation = Quaternion.AngleAxis(calculated_rotation.y, Vector3.up);
+            catapult_arm.transform.localRotation = Quaternion.AngleAxis(calculated_rotation.x, Vector3.right);
 
-            if(LOG_POSITION) {
-                Debug.Log("position => " + position + " rotation => " + rotation);
+            if(LOG_ROTATION) {
+                Debug.Log("server => " + server_rotation);
+            }
+        }
+
+        // Keypresses
+        if(Input.GetKeyUp(KeyCode.Space)) {
+            if(stage == GameStage.AIM) {// Aim => Power
+                stage = GameStage.POWER;
+                stage_aim_value = server_rotation.y;
+            } else if(stage == GameStage.POWER) {// Power => Fire
+                stage = GameStage.FIRE;
+            } else if(stage == GameStage.FIRE) {// Fire => Aim
+                stage = GameStage.AIM;
             }
         }
     }
 
     /* Helpers */
-    public void completeExit() {
+    public void complete_exit() {
         if(SOCKET_ACTIVE) {
-            socketClient.disconnect();
+            socket_client.disconnect();
         }
         Application.Quit();
         UnityEditor.EditorApplication.isPlaying = false;
     }
 
+    public float normalize_angle(float angle) {
+        while(angle > 360) {
+            angle -= 360;
+        }
+
+        while(angle < 0) {
+            angle += 360;
+        }
+
+        return angle;
+    }
+
+    public Vector3 normalize_angle(Vector3 angles) {
+        return new Vector3(
+            normalize_angle(angles.x),
+            normalize_angle(angles.y),
+            normalize_angle(angles.z)
+         );
+    }
+
+    public void calculate_offsets() {
+        offset_rotation = server_rotation;
+    }
+
     /* UI Callbacks */
-    public void onKillButtonClicked() {
-        Debug.Log("Kill button clicked");
-        socketClient.write("KILL");
-        completeExit();
+    public void on_kill_button_clicked() {
+        socket_client.write("KILL");
+        complete_exit();
     }
 
-    public void onDisconnectButtonClicked() {
-        Debug.Log("Disconnect button clicked");
-        socketClient.write("EXIT");
-        completeExit();
+    public void on_disconnect_button_clicked() {
+        socket_client.write("EXIT");
+        complete_exit();
     }
 
-    public void onResetButtonClicked() {
-        Debug.Log("Reset button clicked");
-        socketClient.write("RESET");
+    public void on_reset_button_clicked() {
+        calculate_offsets();
     }
 
     /* Socket Callbacks */
-    void socketReadCallback(string readResult) {
-        string[] stringParts = readResult.Split(" "[0]);
-        float[] parts = new float[stringParts.Length];
+    void socket_read_callback(string read_result) {
+        string[] string_parts = read_result.Split(" "[0]);
+        float[] parts = new float[string_parts.Length];
 
-        for(int i = 0; i < stringParts.Length; i++) {
-            parts[i] = float.Parse(stringParts[i]);
+        for(int i = 0; i < string_parts.Length; i++) {
+            parts[i] = float.Parse(string_parts[i]);
         }
 
-        if(parts.Length != 7) {
-            Debug.LogError("Malformed server response \"" + readResult + "\"");
+        if(parts.Length != 3) {
+            Debug.LogError("Malformed server response \"" + read_result + "\"");
         } else {
-            position.x = parts[2];
-            position.y = parts[0];
-            position.z = parts[1];
+            server_rotation.x = parts[0];
+            server_rotation.y = parts[1];
+            server_rotation.z = parts[2];
 
-            rotation.w = parts[3];
-            rotation.x = parts[4];
-            rotation.y = parts[5];
-            rotation.z = parts[6];
+            server_rotation = normalize_angle(server_rotation);
+
+            if(!initial_offsets_calculated) {
+                calculate_offsets();
+                initial_offsets_calculated = true;
+            }
         }
     }
 }
