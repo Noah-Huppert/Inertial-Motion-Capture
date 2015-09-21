@@ -26,34 +26,17 @@ extern "C" {
 class IMU {
 public:
     std::mutex rotation_lock;
-    Quaternion rotation;
+    Vector3 rotation;
 
-    int df_size = 10;
-    DifferenceFilter accel_df_x = DifferenceFilter(df_size);
-    DifferenceFilter accel_df_y = DifferenceFilter(df_size);
-    DifferenceFilter accel_df_z = DifferenceFilter(df_size);
-
-    Vector3 last_accel;
-    Vector3 last_vel;
-
-    std::mutex position_lock;
-    Vector3 position;
-
-    IMU() {
-        accel_df_z.difference_threshold = 0.25;
-    };
+    IMU() {};
     ~IMU() {};
 
     int start();
     int stop();
 
     int update_rotation();
-    int update_position();
-    int update();
 
 private:
-    long last_position_update_time = -1;
-
     bool bno055_driver_bound = false;
     bool bno055_initialized = false;
     bool bno055_power_mode_normal = false;
