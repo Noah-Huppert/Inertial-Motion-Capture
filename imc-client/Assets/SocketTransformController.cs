@@ -17,7 +17,7 @@ public class SocketTransformController : MonoBehaviour {
     public GameObject catapult_arm;
 
     // Transform
-    Vector3 calibration_rotation = new Vector3(0, 0, 0);
+    Vector3 calibration_rotation = new Vector3(270, 0, 0);
     Vector3 offset_rotation;
     Vector3 server_rotation;
 
@@ -48,21 +48,59 @@ public class SocketTransformController : MonoBehaviour {
         if(Math.Abs(Time.time - last_update_time) >= update_time_interval) {
             last_update_time = Time.time;
 
+            // Apply rotation
+            // X => Pitch
+            // Y => Heading
+            // Z => Roll
+            Vector3 allowed_rotation = new Vector3();
+
+            if(stage == GameStage.AIM) {
+                allowed_rotation.y = server_rotation.y;
+            } else if(stage == GameStage.POWER) {
+                allowed_rotation.x = server_rotation.x;
+                allowed_rotation.y = stage_aim_value;
+            } else if(stage == GameStage.FIRE) {
+                allowed_rotation.y = stage_aim_value;
+            }
+
+            float limit_difference = 75 - allowed_rotation.x;
+            if(limit_difference < 0 && limit_difference >= -195) {
+                allowed_rotation.x = 75;
+            } else if(limit_difference >= -285 && limit_difference < -195) {
+                allowed_rotation.x = 0;
+            }
+
+            Debug.Log("limit_difference => " + limit_difference);
+             
+            Vector3 calculated_rotation = normalize_angle(allowed_rotation - offset_rotation - calibration_rotation);
+
+            if(stage != GameStage.FIRE) {
+                catapult_arm.transform.localRotation = Quaternion.AngleAxis(calculated_rotation.x * -1, Vector3.right);
+            }
+
+            catapult_base.transform.localRotation = Quaternion.AngleAxis(calculated_rotation.y, Vector3.up);
+
+            // Request new rotation
             if(SOCKET_ACTIVE) {
                 socket_client.write("NEXT");
                 socket_client.read();
             }
             
             /*
-            if(stage == GameStage.AIM) {
+            if(stage == GameStage.POWER || stage == GameStage.FIRE) {
                 server_rotation.y = stage_aim_value;
             }
-            */
 
             Vector3 calculated_rotation = normalize_angle(server_rotation - offset_rotation - calibration_rotation);
 
-            catapult_base.transform.localRotation = Quaternion.AngleAxis(calculated_rotation.y, Vector3.up);
-            catapult_arm.transform.localRotation = Quaternion.AngleAxis(calculated_rotation.x, Vector3.right);
+            if(stage == GameStage.AIM) {
+                catapult_base.transform.localRotation = Quaternion.AngleAxis(calculated_rotation.y, Vector3.up);
+            }
+
+            if(stage == GameStage.POWER) {
+                catapult_arm.transform.localRotation = Quaternion.AngleAxis(calculated_rotation.x * -1, Vector3.right);
+            }
+            */
 
             if(LOG_ROTATION) {
                 Debug.Log("server => " + server_rotation);
