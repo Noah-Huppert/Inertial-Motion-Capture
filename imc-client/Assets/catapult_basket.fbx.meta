@@ -1,6 +1,6 @@
 fileFormatVersion: 2
-guid: b34f819e469001743bc6d804c9ed7db4
-timeCreated: 1442978757
+guid: 50760e29441fa324097e62bd1a6db9fe
+timeCreated: 1443028854
 licenseType: Free
 ModelImporter:
   serializedVersion: 18
@@ -23,11 +23,12 @@ ModelImporter:
     100030: Axel.Stop.Right.Back.Inner
     100032: Base.Left
     100034: Base.Right
-    100036: //RootNode
-    100038: Wheel.Back.Left
-    100040: Wheel.Back.Right
-    100042: Wheel.Front.Left
-    100044: Wheel.Front.Right
+    100036: Basket
+    100038: //RootNode
+    100040: Wheel.Back.Left
+    100042: Wheel.Back.Right
+    100044: Wheel.Front.Left
+    100046: Wheel.Front.Right
     400000: Arm
     400002: Arm 1
     400004: Arm_end
@@ -46,11 +47,12 @@ ModelImporter:
     400030: Axel.Stop.Right.Back.Inner
     400032: Base.Left
     400034: Base.Right
-    400036: //RootNode
-    400038: Wheel.Back.Left
-    400040: Wheel.Back.Right
-    400042: Wheel.Front.Left
-    400044: Wheel.Front.Right
+    400036: Basket
+    400038: //RootNode
+    400040: Wheel.Back.Left
+    400042: Wheel.Back.Right
+    400044: Wheel.Front.Left
+    400046: Wheel.Front.Right
     2300000: Axel.Back.Left
     2300002: Axel.Back.Right
     2300004: Axel.Front.Left
@@ -87,27 +89,29 @@ ModelImporter:
     3300030: Wheel.Back.Right
     3300032: Wheel.Front.Left
     3300034: Wheel.Front.Right
-    4300000: Arm
-    4300002: Base.Left
-    4300004: Wheel.Back.Left
-    4300006: Wheel.Front.Right
-    4300008: Axel.Front.Right
-    4300010: Axel.Stop.Front.Right.Outter
-    4300012: Axel.Stop.Front.Right.Inner
-    4300014: Axel.Stop.Back.Left.Inner
-    4300016: Axel.Stop.Back.Right.Outter
-    4300018: Axel.Back.Right
-    4300020: Axel.Back.Left
-    4300022: Axel.Stop.Back.Left.Outter
-    4300024: Axel.Stop.Right.Back.Inner
-    4300026: Axel.Stop.Left.Front.Inner
-    4300028: Axel.Stop.Left.Front.Outter
-    4300030: Axel.Front.Left
-    4300032: Wheel.Front.Left
-    4300034: Wheel.Back.Right
-    4300036: Base.Right
+    4300000: Basket
+    4300002: Arm
+    4300004: Base.Left
+    4300006: Wheel.Back.Left
+    4300008: Wheel.Front.Right
+    4300010: Axel.Front.Right
+    4300012: Axel.Stop.Front.Right.Outter
+    4300014: Axel.Stop.Front.Right.Inner
+    4300016: Axel.Stop.Back.Left.Inner
+    4300018: Axel.Stop.Back.Right.Outter
+    4300020: Axel.Back.Right
+    4300022: Axel.Back.Left
+    4300024: Axel.Stop.Back.Left.Outter
+    4300026: Axel.Stop.Right.Back.Inner
+    4300028: Axel.Stop.Left.Front.Inner
+    4300030: Axel.Stop.Left.Front.Outter
+    4300032: Axel.Front.Left
+    4300034: Wheel.Front.Left
+    4300036: Wheel.Back.Right
+    4300038: Base.Right
     9500000: //RootNode
     13700000: Arm
+    13700002: Basket
   materials:
     importMaterials: 1
     materialName: 0

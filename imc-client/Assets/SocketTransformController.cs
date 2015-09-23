@@ -15,6 +15,8 @@ public class SocketTransformController : MonoBehaviour {
     // Catapult parts
     public GameObject catapult_base;
     public GameObject catapult_arm;
+    public GameObject catapult_basket;
+    public GameObject ball_prefab;
 
     // Transform
     Vector3 calibration_rotation = new Vector3(330, 0, 0);
@@ -32,6 +34,9 @@ public class SocketTransformController : MonoBehaviour {
     float stage_aim_value = 0;
     float stage_fire_speed = 5;
     float stage_fire_start_time = -1;
+    float stage_fire_speed_mod = -1;
+
+    GameObject stage_fire_ball;
 
     // Misc
     private bool initial_offsets_calculated = false;
@@ -87,15 +92,20 @@ public class SocketTransformController : MonoBehaviour {
 
             if(stage != GameStage.FIRE) {// AIM || POWER
                 catapult_arm.transform.localRotation = Quaternion.AngleAxis(calculated_rotation.x * -1, Vector3.right);
-            } else if(catapult_arm.transform.rotation.eulerAngles.x > offset_rotation.x) {// Arm in motion
+            } else if(catapult_arm.transform.rotation.eulerAngles.x >= calculated_rotation.x) {// Arm in motion
                 if(stage_fire_start_time == -1) {
                     stage_fire_start_time = Time.time;
+                    stage_fire_ball = (GameObject) Instantiate(ball_prefab, catapult_basket.transform.position, Quaternion.identity);
+                    stage_fire_ball.transform.SetParent(catapult_basket.transform);
                 }
+                
+                stage_fire_speed_mod = Time.time - stage_fire_start_time;
 
-                float speed_mod = Time.time - stage_fire_start_time;
-                speed_mod *= 10;
+                if(stage_fire_speed_mod >= 0.5) {
+                    stage_fire_speed_mod *= 10;
 
-                catapult_arm.transform.Rotate(stage_fire_speed * speed_mod, 0, 0);
+                    catapult_arm.transform.Rotate(stage_fire_speed * stage_fire_speed_mod, 0, 0);
+                }
             } else {// Arm finished
                 stage_fire_start_time = -1;
             }
