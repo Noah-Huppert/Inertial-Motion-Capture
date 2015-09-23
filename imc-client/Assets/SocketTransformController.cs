@@ -32,11 +32,8 @@ public class SocketTransformController : MonoBehaviour {
     
     GameStage stage = GameStage.AIM;
     float stage_aim_value = 0;
-    float stage_fire_speed = 5;
     float stage_fire_start_time = -1;
-    float stage_fire_speed_mod = -1;
-
-    GameObject stage_fire_ball;
+    bool stage_fire_ball_spawned = false;
 
     // Misc
     private bool initial_offsets_calculated = false;
@@ -61,6 +58,7 @@ public class SocketTransformController : MonoBehaviour {
             // Z => Roll
             Vector3 allowed_rotation = new Vector3();
 
+            // Lock axies based on stage
             if(stage == GameStage.AIM) {
                 allowed_rotation.x = offset_rotation.x;
                 allowed_rotation.y = server_rotation.y;
@@ -71,6 +69,7 @@ public class SocketTransformController : MonoBehaviour {
                 allowed_rotation.y = stage_aim_value;
             }
 
+            // Limit arm rotation
             float offset_server_x = normalize_angle(server_rotation.x - offset_rotation.x);
             
             if(offset_server_x <= 360 && offset_server_x >= 150) {
@@ -79,37 +78,35 @@ public class SocketTransformController : MonoBehaviour {
                 allowed_rotation.x = offset_rotation.x + 95;
             }
 
-            /*
-            // 60 - 180
-            if(allowed_rotation.x > 25 && allowed_rotation.x <= 180) {
-                allowed_rotation.x = 25;
-            } else if(allowed_rotation.x >= 180 && allowed_rotation.x <= 290) {// 290 - 180
-                allowed_rotation.x = 290;
-            }
-            */
-
+            // Calculate final rotation
             Vector3 calculated_rotation = normalize_angle(allowed_rotation - offset_rotation - calibration_rotation);
 
+            // Set arm rotation
             if(stage != GameStage.FIRE) {// AIM || POWER
                 catapult_arm.transform.localRotation = Quaternion.AngleAxis(calculated_rotation.x * -1, Vector3.right);
-            } else if(catapult_arm.transform.rotation.eulerAngles.x >= calculated_rotation.x) {// Arm in motion
-                if(stage_fire_start_time == -1) {
+            } else if(catapult_arm.transform.rotation.eulerAngles.x <= calibration_rotation.x) {// FIRE in progress
+                if(stage_fire_start_time == -1) {// Just fired
                     stage_fire_start_time = Time.time;
-                    stage_fire_ball = (GameObject) Instantiate(ball_prefab, catapult_basket.transform.position, Quaternion.identity);
-                    stage_fire_ball.transform.SetParent(catapult_basket.transform);
+                    stage_fire_ball_spawned = false;
                 }
-                
-                stage_fire_speed_mod = Time.time - stage_fire_start_time;
 
-                if(stage_fire_speed_mod >= 0.5) {
-                    stage_fire_speed_mod *= 10;
+                catapult_arm.transform.Rotate(5, 0, 0);
+            }  else {// FIRE complete
+                if(!stage_fire_ball_spawned) {
+                    float fire_time = (Time.time - stage_fire_start_time) * 50;
 
-                    catapult_arm.transform.Rotate(stage_fire_speed * stage_fire_speed_mod, 0, 0);
+                    GameObject ball = Instantiate(ball_prefab);
+                    ball.transform.position = catapult_basket.transform.position;
+                    ball.transform.rotation = Quaternion.AngleAxis(calibration_rotation.x, Vector3.right);
+
+                    ball.GetComponent<Rigidbody>().AddForce(0, 0, 200 * fire_time);
+
+                    stage_fire_ball_spawned = true;
+                    stage_fire_start_time = -1;
                 }
-            } else {// Arm finished
-                stage_fire_start_time = -1;
             }
 
+            // Set base rotation
             catapult_base.transform.localRotation = Quaternion.AngleAxis(calculated_rotation.y, Vector3.up);
 
             // Request new rotation
@@ -117,22 +114,6 @@ public class SocketTransformController : MonoBehaviour {
                 socket_client.write("NEXT");
                 socket_client.read();
             }
-            
-            /*
-            if(stage == GameStage.POWER || stage == GameStage.FIRE) {
-                server_rotation.y = stage_aim_value;
-            }
-
-            Vector3 calculated_rotation = normalize_angle(server_rotation - offset_rotation - calibration_rotation);
-
-            if(stage == GameStage.AIM) {
-                catapult_base.transform.localRotation = Quaternion.AngleAxis(calculated_rotation.y, Vector3.up);
-            }
-
-            if(stage == GameStage.POWER) {
-                catapult_arm.transform.localRotation = Quaternion.AngleAxis(calculated_rotation.x * -1, Vector3.right);
-            }
-            */
 
             if(LOG_ROTATION) {
                 Debug.Log("server => " + server_rotation);
