@@ -1,0 +1,174 @@
+fileFormatVersion: 2
+guid: b34f819e469001743bc6d804c9ed7db4
+timeCreated: 1442978757
+licenseType: Free
+ModelImporter:
+  serializedVersion: 18
+  fileIDToRecycleName:
+    100000: Arm
+    100002: Arm 1
+    100004: Arm_end
+    100006: Armature.Arm
+    100008: Axel.Back.Left
+    100010: Axel.Back.Right
+    100012: Axel.Front.Left
+    100014: Axel.Front.Right
+    100016: Axel.Stop.Back.Left.Inner
+    100018: Axel.Stop.Back.Left.Outter
+    100020: Axel.Stop.Back.Right.Outter
+    100022: Axel.Stop.Front.Right.Inner
+    100024: Axel.Stop.Front.Right.Outter
+    100026: Axel.Stop.Left.Front.Inner
+    100028: Axel.Stop.Left.Front.Outter
+    100030: Axel.Stop.Right.Back.Inner
+    100032: Base.Left
+    100034: Base.Right
+    100036: //RootNode
+    100038: Wheel.Back.Left
+    100040: Wheel.Back.Right
+    100042: Wheel.Front.Left
+    100044: Wheel.Front.Right
+    400000: Arm
+    400002: Arm 1
+    400004: Arm_end
+    400006: Armature.Arm
+    400008: Axel.Back.Left
+    400010: Axel.Back.Right
+    400012: Axel.Front.Left
+    400014: Axel.Front.Right
+    400016: Axel.Stop.Back.Left.Inner
+    400018: Axel.Stop.Back.Left.Outter
+    400020: Axel.Stop.Back.Right.Outter
+    400022: Axel.Stop.Front.Right.Inner
+    400024: Axel.Stop.Front.Right.Outter
+    400026: Axel.Stop.Left.Front.Inner
+    400028: Axel.Stop.Left.Front.Outter
+    400030: Axel.Stop.Right.Back.Inner
+    400032: Base.Left
+    400034: Base.Right
+    400036: //RootNode
+    400038: Wheel.Back.Left
+    400040: Wheel.Back.Right
+    400042: Wheel.Front.Left
+    400044: Wheel.Front.Right
+    2300000: Axel.Back.Left
+    2300002: Axel.Back.Right
+    2300004: Axel.Front.Left
+    2300006: Axel.Front.Right
+    2300008: Axel.Stop.Back.Left.Inner
+    2300010: Axel.Stop.Back.Left.Outter
+    2300012: Axel.Stop.Back.Right.Outter
+    2300014: Axel.Stop.Front.Right.Inner
+    2300016: Axel.Stop.Front.Right.Outter
+    2300018: Axel.Stop.Left.Front.Inner
+    2300020: Axel.Stop.Left.Front.Outter
+    2300022: Axel.Stop.Right.Back.Inner
+    2300024: Base.Left
+    2300026: Base.Right
+    2300028: Wheel.Back.Left
+    2300030: Wheel.Back.Right
+    2300032: Wheel.Front.Left
+    2300034: Wheel.Front.Right
+    3300000: Axel.Back.Left
+    3300002: Axel.Back.Right
+    3300004: Axel.Front.Left
+    3300006: Axel.Front.Right
+    3300008: Axel.Stop.Back.Left.Inner
+    3300010: Axel.Stop.Back.Left.Outter
+    3300012: Axel.Stop.Back.Right.Outter
+    3300014: Axel.Stop.Front.Right.Inner
+    3300016: Axel.Stop.Front.Right.Outter
+    3300018: Axel.Stop.Left.Front.Inner
+    3300020: Axel.Stop.Left.Front.Outter
+    3300022: Axel.Stop.Right.Back.Inner
+    3300024: Base.Left
+    3300026: Base.Right
+    3300028: Wheel.Back.Left
+    3300030: Wheel.Back.Right
+    3300032: Wheel.Front.Left
+    3300034: Wheel.Front.Right
+    4300000: Arm
+    4300002: Base.Left
+    4300004: Wheel.Back.Left
+    4300006: Wheel.Front.Right
+    4300008: Axel.Front.Right
+    4300010: Axel.Stop.Front.Right.Outter
+    4300012: Axel.Stop.Front.Right.Inner
+    4300014: Axel.Stop.Back.Left.Inner
+    4300016: Axel.Stop.Back.Right.Outter
+    4300018: Axel.Back.Right
+    4300020: Axel.Back.Left
+    4300022: Axel.Stop.Back.Left.Outter
+    4300024: Axel.Stop.Right.Back.Inner
+    4300026: Axel.Stop.Left.Front.Inner
+    4300028: Axel.Stop.Left.Front.Outter
+    4300030: Axel.Front.Left
+    4300032: Wheel.Front.Left
+    4300034: Wheel.Back.Right
+    4300036: Base.Right
+    9500000: //RootNode
+    13700000: Arm
+  materials:
+    importMaterials: 1
+    materialName: 0
+    materialSearch: 1
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    optimizeGameObjects: 0
+    motionNodeName: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    animationCompression: 1
+    animationRotationError: .5
+    animationPositionError: .5
+    animationScaleError: .5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    clipAnimations: []
+    isReadable: 1
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    importBlendShapes: 1
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    optimizeMeshForGPU: 1
+    keepQuads: 0
+    weldVertices: 1
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+  tangentSpace:
+    normalSmoothAngle: 60
+    splitTangentsAcrossUV: 1
+    normalImportMode: 0
+    tangentImportMode: 1
+  importAnimation: 1
+  copyAvatar: 0
+  humanDescription:
+    human: []
+    skeleton: []
+    armTwist: .5
+    foreArmTwist: .5
+    upperLegTwist: .5
+    legTwist: .5
+    armStretch: .0500000007
+    legStretch: .0500000007
+    feetSpacing: 0
+    rootMotionBoneName: 
+    hasTranslationDoF: 0
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  animationType: 2
+  humanoidOversampling: 1
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

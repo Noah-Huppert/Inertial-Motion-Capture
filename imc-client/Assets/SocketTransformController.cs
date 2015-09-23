@@ -17,7 +17,7 @@ public class SocketTransformController : MonoBehaviour {
     public GameObject catapult_arm;
 
     // Transform
-    Vector3 calibration_rotation = new Vector3(270, 0, 0);
+    Vector3 calibration_rotation = new Vector3(330, 0, 0);
     Vector3 offset_rotation;
     Vector3 server_rotation;
 
@@ -27,9 +27,11 @@ public class SocketTransformController : MonoBehaviour {
         POWER,
         FIRE
     }
-
-    float stage_aim_value = 0;
+    
     GameStage stage = GameStage.AIM;
+    float stage_aim_value = 0;
+    float stage_fire_speed = 5;
+    float stage_fire_start_time = -1;
 
     // Misc
     private bool initial_offsets_calculated = false;
@@ -55,6 +57,7 @@ public class SocketTransformController : MonoBehaviour {
             Vector3 allowed_rotation = new Vector3();
 
             if(stage == GameStage.AIM) {
+                allowed_rotation.x = offset_rotation.x;
                 allowed_rotation.y = server_rotation.y;
             } else if(stage == GameStage.POWER) {
                 allowed_rotation.x = server_rotation.x;
@@ -63,19 +66,38 @@ public class SocketTransformController : MonoBehaviour {
                 allowed_rotation.y = stage_aim_value;
             }
 
-            float limit_difference = 75 - allowed_rotation.x;
-            if(limit_difference < 0 && limit_difference >= -195) {
-                allowed_rotation.x = 75;
-            } else if(limit_difference >= -285 && limit_difference < -195) {
-                allowed_rotation.x = 0;
+            float offset_server_x = normalize_angle(server_rotation.x - offset_rotation.x);
+            
+            if(offset_server_x <= 360 && offset_server_x >= 150) {
+                allowed_rotation.x = offset_rotation.x;
+            } else if(offset_server_x >= 95 && offset_server_x < 150) {
+                allowed_rotation.x = offset_rotation.x + 95;
             }
 
-            Debug.Log("limit_difference => " + limit_difference);
-             
+            /*
+            // 60 - 180
+            if(allowed_rotation.x > 25 && allowed_rotation.x <= 180) {
+                allowed_rotation.x = 25;
+            } else if(allowed_rotation.x >= 180 && allowed_rotation.x <= 290) {// 290 - 180
+                allowed_rotation.x = 290;
+            }
+            */
+
             Vector3 calculated_rotation = normalize_angle(allowed_rotation - offset_rotation - calibration_rotation);
 
-            if(stage != GameStage.FIRE) {
+            if(stage != GameStage.FIRE) {// AIM || POWER
                 catapult_arm.transform.localRotation = Quaternion.AngleAxis(calculated_rotation.x * -1, Vector3.right);
+            } else if(catapult_arm.transform.rotation.eulerAngles.x > offset_rotation.x) {// Arm in motion
+                if(stage_fire_start_time == -1) {
+                    stage_fire_start_time = Time.time;
+                }
+
+                float speed_mod = Time.time - stage_fire_start_time;
+                speed_mod *= 10;
+
+                catapult_arm.transform.Rotate(stage_fire_speed * speed_mod, 0, 0);
+            } else {// Arm finished
+                stage_fire_start_time = -1;
             }
 
             catapult_base.transform.localRotation = Quaternion.AngleAxis(calculated_rotation.y, Vector3.up);
