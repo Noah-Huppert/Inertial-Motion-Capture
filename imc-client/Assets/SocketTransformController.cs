@@ -29,11 +29,12 @@ public class SocketTransformController : MonoBehaviour {
         POWER,
         FIRE
     }
-    
+
     GameStage stage = GameStage.AIM;
     float stage_aim_value = 0;
     float stage_fire_start_time = -1;
-    bool stage_fire_ball_spawned = false;
+    GameObject stage_fire_ball = null;
+    bool stage_fire_ball_thrown = false;
 
     // Misc
     private bool initial_offsets_calculated = false;
@@ -71,7 +72,7 @@ public class SocketTransformController : MonoBehaviour {
 
             // Limit arm rotation
             float offset_server_x = normalize_angle(server_rotation.x - offset_rotation.x);
-            
+
             if(offset_server_x <= 360 && offset_server_x >= 150) {
                 allowed_rotation.x = offset_rotation.x;
             } else if(offset_server_x >= 95 && offset_server_x < 150) {
@@ -87,21 +88,23 @@ public class SocketTransformController : MonoBehaviour {
             } else if(catapult_arm.transform.rotation.eulerAngles.x <= calibration_rotation.x) {// FIRE in progress
                 if(stage_fire_start_time == -1) {// Just fired
                     stage_fire_start_time = Time.time;
-                    stage_fire_ball_spawned = false;
+                    stage_fire_ball_thrown = false;
+
+                    stage_fire_ball = (GameObject) Instantiate(ball_prefab, catapult_basket.transform.position, catapult_base.transform.rotation);
+                    stage_fire_ball.transform.SetParent(catapult_basket.transform);
                 }
 
                 catapult_arm.transform.Rotate(5, 0, 0);
-            }  else {// FIRE complete
-                if(!stage_fire_ball_spawned) {
+            } else {// FIRE complete
+                if(!stage_fire_ball_thrown) {
                     float fire_time = (Time.time - stage_fire_start_time) * 50;
 
-                    GameObject ball = Instantiate(ball_prefab);
-                    ball.transform.position = catapult_basket.transform.position;
-                    ball.transform.rotation = Quaternion.AngleAxis(calibration_rotation.x, Vector3.right);
+                    stage_fire_ball.transform.position = catapult_basket.transform.position;
+                    stage_fire_ball.transform.rotation = Quaternion.AngleAxis(calibration_rotation.x, Vector3.right);
 
-                    ball.GetComponent<Rigidbody>().AddForce(0, 0, 200 * fire_time);
+                    stage_fire_ball.GetComponent<Rigidbody>().AddForce(0, 0, 200 * fire_time);
 
-                    stage_fire_ball_spawned = true;
+                    stage_fire_ball_thrown = true;
                     stage_fire_start_time = -1;
                 }
             }
