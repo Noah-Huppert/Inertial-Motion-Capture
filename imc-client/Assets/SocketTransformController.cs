@@ -90,7 +90,7 @@ public class SocketTransformController : MonoBehaviour {
                     stage_fire_start_time = Time.time;
                     stage_fire_ball_thrown = false;
 
-                    stage_fire_ball = (GameObject) Instantiate(ball_prefab, catapult_basket.transform.position, catapult_base.transform.rotation);
+                    stage_fire_ball = (GameObject) Instantiate(ball_prefab, catapult_basket.transform.position, catapult_basket.transform.rotation);
                     stage_fire_ball.transform.SetParent(catapult_basket.transform);
                 }
 
@@ -99,13 +99,15 @@ public class SocketTransformController : MonoBehaviour {
                 if(!stage_fire_ball_thrown) {
                     float fire_time = (Time.time - stage_fire_start_time) * 50;
 
-                    stage_fire_ball.transform.position = catapult_basket.transform.position;
-                    stage_fire_ball.transform.rotation = Quaternion.AngleAxis(calibration_rotation.x, Vector3.right);
-
-                    stage_fire_ball.GetComponent<Rigidbody>().AddForce(0, 0, 200 * fire_time);
+                    Destroy(stage_fire_ball);
+                    stage_fire_ball = (GameObject) Instantiate(ball_prefab, new Vector3(0, 16, -1.13F), catapult_basket.transform.rotation);
+                    
+                    stage_fire_ball.GetComponent<Rigidbody>().AddRelativeForce(0, 0, 100 * fire_time);
 
                     stage_fire_ball_thrown = true;
                     stage_fire_start_time = -1;
+
+                    //Debug.Break();
                 }
             }
 
