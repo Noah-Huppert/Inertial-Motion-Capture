@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using System;
 
 public class SocketTransformController : MonoBehaviour {
@@ -17,6 +18,12 @@ public class SocketTransformController : MonoBehaviour {
     public GameObject catapult_arm;
     public GameObject catapult_basket;
     public GameObject ball_prefab;
+
+    private const string stage_aim_instructions = "rotate controller to aim, then press space";
+    private const string stage_power_instructions = "tilt controller to set power, then press space";
+    private const string stage_fire_instructions = "press space to fire again";
+
+    public Text instructions_text;
 
     // Transform
     Vector3 calibration_rotation = new Vector3(330, 0, 0);
@@ -42,6 +49,8 @@ public class SocketTransformController : MonoBehaviour {
     /* Unity Lifecyle */
     void Start() {
         socket_client = new SocketClient("192.168.1.9", 1234, socket_read_callback);
+
+        instructions_text.text = stage_aim_instructions;
 
         if(SOCKET_ACTIVE) {
             socket_client.connect();
@@ -102,7 +111,7 @@ public class SocketTransformController : MonoBehaviour {
                     Destroy(stage_fire_ball);
                     stage_fire_ball = (GameObject) Instantiate(ball_prefab, new Vector3(0, 16, -1.13F), catapult_basket.transform.rotation);
                     
-                    stage_fire_ball.GetComponent<Rigidbody>().AddRelativeForce(0, 0, 100 * fire_time);
+                    stage_fire_ball.GetComponent<Rigidbody>().AddRelativeForce(0, 0, 6000 * fire_time);
 
                     stage_fire_ball_thrown = true;
                     stage_fire_start_time = -1;
@@ -129,11 +138,14 @@ public class SocketTransformController : MonoBehaviour {
         if(Input.GetKeyUp(KeyCode.Space)) {
             if(stage == GameStage.AIM) {// Aim => Power
                 stage = GameStage.POWER;
+                instructions_text.text = stage_power_instructions;
                 stage_aim_value = server_rotation.y;
             } else if(stage == GameStage.POWER) {// Power => Fire
                 stage = GameStage.FIRE;
+                instructions_text.text = stage_fire_instructions;
             } else if(stage == GameStage.FIRE) {// Fire => Aim
                 stage = GameStage.AIM;
+                instructions_text.text = stage_aim_instructions;
             }
         }
     }
@@ -184,6 +196,16 @@ public class SocketTransformController : MonoBehaviour {
 
     public void on_reset_button_clicked() {
         calculate_offsets();
+    }
+
+    public void on_target_reset_button_click() {
+        socket_client.write("EXIT");
+        Application.LoadLevel("Demo-Game");
+    }
+
+    public void on_go_to_game_start_button_clicked() {
+        socket_client.write("EXIT");
+        Application.LoadLevel("Demo-Start");
     }
 
     /* Socket Callbacks */
