@@ -7,6 +7,8 @@ public class SocketTransformController : MonoBehaviour {
     private const bool LOG_ROTATION = false;
     private const bool SOCKET_ACTIVE = true;
 
+    public String edison_ip;
+
     // Socket
     private SocketClient socket_client;
 
@@ -39,7 +41,7 @@ public class SocketTransformController : MonoBehaviour {
 
     GameStage stage = GameStage.AIM;
     float stage_aim_value = 0;
-    float stage_fire_start_time = -1;
+    float stage_power_angle = -1;
     GameObject stage_fire_ball = null;
     bool stage_fire_ball_thrown = false;
 
@@ -48,7 +50,7 @@ public class SocketTransformController : MonoBehaviour {
 
     /* Unity Lifecyle */
     void Start() {
-        socket_client = new SocketClient("192.168.1.9", 1234, socket_read_callback);
+        socket_client = new SocketClient(edison_ip, 1234, socket_read_callback);
 
         instructions_text.text = stage_aim_instructions;
 
@@ -58,8 +60,10 @@ public class SocketTransformController : MonoBehaviour {
     }
 
     void Update() {
+        float temp_allowed_rotation_x = -1;
+
         // Update rotation
-        if(Math.Abs(Time.time - last_update_time) >= update_time_interval) {
+        if (Math.Abs(Time.time - last_update_time) >= update_time_interval) {
             last_update_time = Time.time;
 
             // Apply rotation
@@ -88,6 +92,8 @@ public class SocketTransformController : MonoBehaviour {
                 allowed_rotation.x = offset_rotation.x + 95;
             }
 
+            temp_allowed_rotation_x = allowed_rotation.x;
+
             // Calculate final rotation
             Vector3 calculated_rotation = normalize_angle(allowed_rotation - offset_rotation - calibration_rotation);
 
@@ -95,26 +101,26 @@ public class SocketTransformController : MonoBehaviour {
             if(stage != GameStage.FIRE) {// AIM || POWER
                 catapult_arm.transform.localRotation = Quaternion.AngleAxis(calculated_rotation.x * -1, Vector3.right);
             } else if(catapult_arm.transform.rotation.eulerAngles.x <= calibration_rotation.x) {// FIRE in progress
-                if(stage_fire_start_time == -1) {// Just fired
-                    stage_fire_start_time = Time.time;
+                /*
+                if(!stage_fire_ball_thrown) {// Just fired
                     stage_fire_ball_thrown = false;
 
                     stage_fire_ball = (GameObject) Instantiate(ball_prefab, catapult_basket.transform.position, catapult_basket.transform.rotation);
                     stage_fire_ball.transform.SetParent(catapult_basket.transform);
                 }
+                */
 
+                stage_fire_ball_thrown = false;
                 catapult_arm.transform.Rotate(5, 0, 0);
             } else {// FIRE complete
                 if(!stage_fire_ball_thrown) {
-                    float fire_time = (Time.time - stage_fire_start_time) * 50;
-
-                    Destroy(stage_fire_ball);
+                    //Destroy(stage_fire_ball);
                     stage_fire_ball = (GameObject) Instantiate(ball_prefab, new Vector3(0, 16, -1.13F), catapult_basket.transform.rotation);
-                    
-                    stage_fire_ball.GetComponent<Rigidbody>().AddRelativeForce(0, 0, 6000 * fire_time);
+
+                    stage_fire_ball.GetComponent<Rigidbody>().AddRelativeForce(0, 0, 1000 * stage_power_angle);
 
                     stage_fire_ball_thrown = true;
-                    stage_fire_start_time = -1;
+                    stage_power_angle = -1;
 
                     //Debug.Break();
                 }
@@ -142,6 +148,7 @@ public class SocketTransformController : MonoBehaviour {
                 stage_aim_value = server_rotation.y;
             } else if(stage == GameStage.POWER) {// Power => Fire
                 stage = GameStage.FIRE;
+                stage_power_angle = temp_allowed_rotation_x;
                 instructions_text.text = stage_fire_instructions;
             } else if(stage == GameStage.FIRE) {// Fire => Aim
                 stage = GameStage.AIM;
