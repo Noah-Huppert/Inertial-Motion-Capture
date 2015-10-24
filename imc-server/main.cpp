@@ -39,13 +39,6 @@ public:
             } else if(strcmp(receive_buffer, "RESET") == 0) {
                 imu_lock.lock();
 
-                imu->position_lock.lock();
-                imu->position = Vector3();
-                imu->vel_sum = Vector3();
-                imu->last_vel = Vector3();
-                imu->last_accel = Vector3();
-                imu->position_lock.unlock();
-
                 imu->rotation_lock.lock();
                 imu->rotation = Quaternion();
                 imu->rotation_lock.unlock();
@@ -60,10 +53,6 @@ public:
                 std::stringstream out_stream;
 
                 imu_lock.lock();
-
-                imu->position_lock.lock();
-                out_stream << imu->position.to_space_delimited() << " ";
-                imu->position_lock.unlock();
 
                 imu->rotation_lock.lock();
                 out_stream << imu->rotation.to_space_delimited();
@@ -110,7 +99,7 @@ void imu_update() {
             server_running_lock.unlock();
 
             imu_lock.lock();
-            imu->update();
+            imu->update_rotation();
             imu_lock.unlock();
 
             last_update = imc_time();

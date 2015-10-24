@@ -15,13 +15,8 @@ extern "C" {
 
 #include "status.h"
 #include "log.h"
-#include "imc_time.hpp"
 
 #include "quaternion.hpp"
-#include "vector3.hpp"
-
-#include "difference_filter.hpp"
-#include "csv_log.hpp"
 
 class IMU {
 public:
