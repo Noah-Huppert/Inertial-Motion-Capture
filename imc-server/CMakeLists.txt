@@ -16,31 +16,7 @@ add_subdirectory(bno055-driver)
 # Compile
 # -- Source
 set(SOURCE_FILES ${SOURCE_FILES}
-        status.h
-        log.h
-
-        csv_log.hpp
-        csv_log.cpp
-
-        moving_average_filter.hpp
-        moving_average_filter.cpp
-
-        difference_filter.hpp
-        difference_filter.cpp
-
-        imc_time.hpp
-        imc_time.cpp
-
-        quaternion.hpp
-        vector3.hpp
-
-        socket_server.hpp
-        socket_server.cpp
-
-        imu.hpp
-        imu.cpp
-
-        main.cpp)
+        )
 
 # -- Create
 add_executable(imc-server ${SOURCE_FILES})
