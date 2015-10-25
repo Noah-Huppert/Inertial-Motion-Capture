@@ -155,18 +155,18 @@ def run_helpers(*args):
 def command_clean():
     run_helpers("edison_info", "ssh_client")
 
-    log.i("Cleaning \"imc-server\"")
+    log.i("Cleaning \"imc-host\"")
 
-    run_ssh_command("rm -rf /home/root/imc-server")
+    run_ssh_command("rm -rf /home/root/imc-host")
 
 def command_push():
     run_helpers("edison_info", "ssh_client")
 
-    log.i("Pushing \"imc-server\" to Edison")
+    log.i("Pushing \"imc-host\" to Edison")
 
     sftp = ssh.open_sftp()
 
-    for (dir_path, dir_names, filenames) in os.walk("imc-server"):
+    for (dir_path, dir_names, filenames) in os.walk("imc-host"):
         for filename in filenames:
             local_path = os.path.join(dir_path, filename)
             server_path = os.path.join("/home/root", local_path)
@@ -188,25 +188,25 @@ def command_push():
 def command_compile():
     run_helpers("edison_info", "ssh_client")
 
-    log.i("Compiling \"imc-server\"")
+    log.i("Compiling \"imc-host\"")
 
-    compile_exit_code = run_ssh_command("mkdir -p /home/root/imc-server/build && cd /home/root/imc-server/build && /home/root/cmake-3.3.1-Linux-i386/bin/cmake .. && make")
+    compile_exit_code = run_ssh_command("mkdir -p /home/root/imc-host/build && cd /home/root/imc-host/build && /home/root/cmake-3.3.1-Linux-i386/bin/cmake .. && make")
 
     if compile_exit_code != 0:
-        log.e("Failed to compile \"imc-server\"")
+        log.e("Failed to compile \"imc-host\"")
         sys.exit(0)
 
 def command_run():
     run_helpers("edison_info", "ssh_client")
 
-    log.i("Running \"imc-server\"")
+    log.i("Running \"imc-host\"")
 
     print("--------------------")
 
-    run_ssh_command("cd /home/root/imc-server/build && ./imc-server")
+    run_ssh_command("cd /home/root/imc-host/build && ./imc-host")
 
 def command_kill():
-    log.i("Killing \"imc-server\"")
+    log.i("Killing \"imc-host\"")
 
     netstat_p = subprocess.Popen(
                             [
@@ -225,16 +225,16 @@ def command_kill():
 
     netstat_out = netstat_out.decode("utf-8")
 
-    pid_exp = re.compile("(\d{0,4})\/imc-server")
+    pid_exp = re.compile("(\d{0,4})\/imc-host")
     pid_match = re.search(pid_exp, netstat_out)
 
     try:
         pid = pid_match.group(1)
 
         run_ssh_command("kill -9 {0}".format(pid))
-        log.i("\"imc-server\" killed successfully")
+        log.i("\"imc-host\" killed successfully")
     except:
-        log.i("\"imc-server\" not running")
+        log.i("\"imc-host\" not running")
 
 def command_ssh():
     run_helpers("edison_info", "check_sshpass")

@@ -3,6 +3,17 @@ Motion capture using Inertial Motion Units
 
 Using [Ubilinux](http://www.emutexlabs.com/ubilinux) for OS
 
+# Glossary
+- **Host:** The device that collection IMU data, the Intel Edison
+- **Client:** The device that receives IMU data
+
+# Directories
+- **/cli**: Code for the Intel Edison command line interface
+    - Run the CLI with `./cli/cli` from the project root
+- **/host**: Code for the Host
+    - **/lib**: Libraries
+    - **/src**: Source code
+
 # Usefull Intel Edison commands
 - `client`(Any computer)
     - `python cli.py <commands>`

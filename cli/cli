@@ -1,0 +1,8 @@
+#!/bin/bash
+
+if [ -f "cli/.env" ]
+    then
+    source cli/.env
+fi
+
+python3 cli/cli.py $@
