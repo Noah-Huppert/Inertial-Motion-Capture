@@ -1,7 +1,7 @@
 # Inertial-Motion-Capture
 Motion capture using Inertial Motion Units
 
-Using [Ubilinux](http://www.emutexlabs.com/ubilinux) for OS
+Using [Ubilinux](https://emutex.com/ubilinux) for OS (Deprecated, basically Ubuntu for Intel Edison)
 
 # Usefull Intel Edison commands
 - `client`(Any computer)
