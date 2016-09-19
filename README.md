@@ -30,7 +30,7 @@ Using [Ubilinux](https://emutex.com/ubilinux) for OS (Deprecated, basically Ubun
         - `su`
         - `chmod 0600 /etc/network/interfaces`
         - `wpa_passphrase <SSID> <PASSWORD>`
-            - Save the `psk` value in the output. It will later be refereed to
+            - Save the `psk` value in the output. It will later be referred to
             as `<PSK`>
         - Open up `/etc/network/interfaces` in an editor
             - Comment out the line that says `auto usb0`
